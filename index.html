@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>수신함 / 구성원 — 파파 그룹핑(OPD-79)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Apple SD Gothic Neo', '맑은 고딕', sans-serif; }
+    body { display: flex; height: 100vh; background: #f5f5f7; color: #222; font-size: 14px; }
+
+    /* ── 아이콘 사이드바 ── */
+    .icon-sidebar {
+      width: 56px; background: #fff; border-right: 1px solid #e0e0e0;
+      display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px;
+    }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 8px; background: #f0f0f0;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; position: relative;
+    }
+    .icon-btn.active { background: #e8e8f8; }
+    .icon-btn svg { width: 20px; height: 20px; stroke: #888; fill: none; stroke-width: 2; }
+    .icon-btn.active svg { stroke: #5b5fcf; }
+    .icon-btn .tip {
+      display:none; position:absolute; left:46px; top:50%; transform:translateY(-50%);
+      background:#333; color:#fff; font-size:11px; padding:3px 7px; border-radius:5px; white-space:nowrap; z-index:20;
+    }
+    .icon-btn:hover .tip { display:block; }
+    .avatar-btn {
+      width: 40px; height: 40px; border-radius: 50%; background: #dde; border: none; cursor: pointer;
+      position: relative; font-size: 11px; color: #555; display: flex; align-items: center; justify-content: center;
+    }
+    .avatar-btn .badge { position: absolute; top: 1px; right: 1px; width: 10px; height: 10px; border-radius: 50%; background: #e55; border: 1.5px solid #fff; }
+    .avatar-label { font-size: 10px; color: #999; margin-top: 2px; }
+    .icon-sidebar-bottom { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+    /* ── 수신함 사이드바 ── */
+    .inbox-sidebar { width: 260px; background: #f8f8fb; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; overflow: hidden; }
+    .inbox-header { padding: 18px 16px 10px; font-size: 18px; font-weight: 700; }
+    .btn-start { margin: 0 12px 12px; padding: 10px; background: #3a3de8; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
+    .toggle-row { margin: 0 12px 4px; padding: 8px 12px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #888; }
+    .toggle-badge { background: #eee; border-radius: 4px; padding: 2px 7px; font-size: 11px; margin-right: 4px; }
+    .sidebar-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
+    .section-title { padding: 10px 16px 4px; font-size: 12px; font-weight: 700; color: #444; }
+    .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; cursor: pointer; border-radius: 6px; margin: 1px 8px; gap: 8px; }
+    .nav-item:hover, .nav-item.active { background: #eaeaf8; }
+    .nav-item .label { display: flex; align-items: center; gap: 8px; color: #444; }
+    .nav-item .count { font-size: 12px; color: #888; }
+    .count-badge { background: #f87; color: #fff; border-radius: 10px; font-size: 11px; padding: 1px 7px; }
+    .icon-box { width: 18px; height: 18px; background: #ddd; border-radius: 3px; display: inline-block; }
+    .sub-item { padding-left: 32px; }
+    .divider { height: 1px; background: #e8e8e8; margin: 8px 12px; }
+    .group-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 4px; }
+    .group-header span { font-size: 12px; color: #999; }
+    .group-header button { background: none; border: none; font-size: 16px; color: #aaa; cursor: pointer; }
+    .group-item { display: flex; align-items: center; gap: 8px; padding: 6px 16px; cursor: pointer; }
+    .group-item:hover { background: #eaeaf8; border-radius: 6px; margin: 0 8px; padding: 6px 8px; }
+    .group-avatar { width: 22px; height: 22px; background: #ddd; border-radius: 50%; flex-shrink: 0; }
+    .group-name { font-size: 13px; color: #444; }
+
+    /* ── 수신함 사이드바 구성원 그룹핑 ── */
+    .mg-panel { margin: 4px 8px 8px; background:#fff; border:1px solid #e8e8ee; border-radius:10px; padding:10px; }
+    .mg-head { display:flex; align-items:center; gap:6px; padding:2px 2px 8px; cursor:pointer; }
+    .mg-head .t { font-size:14px; font-weight:700; }
+    .mg-head .n { font-size:13px; color:#888; }
+    .mg-head .unread-total { margin-left:auto; background:#f0455a; color:#fff; border-radius:11px; font-size:11px; font-weight:700; padding:2px 9px; }
+    .mg-head .arrow { color:#bbb; font-size:12px; }
+    .mg-select { width:100%; margin-bottom:6px; padding:8px 10px; border:1px solid #e2e2e8; border-radius:8px; font-size:12px; color:#555; background:#fff; }
+    .mg-btns { display:flex; gap:6px; margin:2px 0 8px; }
+    .mg-btns button { flex:1; padding:7px 0; border:1px solid #e2e2e8; border-radius:8px; background:#fff; font-size:12px; color:#555; cursor:pointer; }
+    .mg-btns button:hover { background:#f5f5f8; }
+    .mg-check { display:flex; align-items:center; justify-content:space-between; font-size:12px; color:#555; padding:2px 2px 8px; }
+    .mg-check label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+    .mg-sort { color:#3a3de8; cursor:pointer; }
+    .mg-tree { display:block; }
+    .mg-tree.collapsed { display:none; }
+    .mg-section-head { display:flex; align-items:center; gap:6px; padding:8px 2px 4px; font-size:12px; font-weight:700; }
+    .mg-section-head .dot { width:7px; height:7px; border-radius:50%; background:#1a9c5b; }
+    .mg-section-head.resigned .dot { background:#bbb; }
+    .mg-section-head .meta { margin-left:auto; font-size:11px; color:#999; font-weight:500; }
+    .mg-section-head .meta .u { color:#f0455a; font-weight:700; }
+    .mg-grp-head { display:flex; align-items:center; gap:6px; padding:5px 2px 2px; font-size:12px; }
+    .mg-grp-head .gl { font-weight:600; }
+    /* 역할: 관리자=볼드 강조 / 컨설턴트=일반 */
+    .mg-grp-head.lv-role { padding-top:8px; margin-top:5px; border-top:1px solid #ececf1; }
+    .mg-grp-head.lv-role.admin .gl { color:#2b2b2b; font-weight:800; font-size:12px; }
+    .mg-grp-head.lv-role.consultant .gl { color:#888; font-weight:400; font-size:12px; }
+    /* 카테고리: 좌측 컬러바로 명확히 구분 */
+    .mg-grp-head.lv-category { margin-top:3px; cursor:pointer; }
+    .mg-grp-head.lv-category .gl { color:#3a3de8; font-weight:700; font-size:12px; border-left:3px solid #3a3de8; padding-left:7px; line-height:1.1; }
+    .mg-grp-head.lv-category .caret { margin-left:auto; color:#bbb; font-size:10px; }
+    .mg-cat-body.collapsed { display:none; }
+    /* 상담수단(채팅/TM) 칩 */
+    .mg-chan-head { padding:6px 2px 3px; }
+    .chip-ch { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:3px 11px; border-radius:6px; }
+    .chip-ch::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .chip-ch.chat { background:#eef0ff; color:#3a3de8; }
+    .chip-ch.tm { background:#fff1e3; color:#d98300; }
+    .mg-member { display:flex; align-items:center; gap:8px; padding:6px 4px; border-radius:6px; cursor:pointer; }
+    .mg-member:hover { background:#f4f4fb; }
+    .mg-member .av { width:22px; height:22px; border-radius:50%; background:#e6e6ef; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .mg-member .av svg { width:13px; height:13px; stroke:#9a9ab0; fill:none; stroke-width:2; }
+    .mg-member .nm { font-size:13px; color:#333; }
+    .mg-member.has-unread .nm { font-weight:700; }
+    .mg-member.resigned .nm { color:#aaa; text-decoration:line-through; }
+    .mg-member .ub { margin-left:auto; background:#f0455a; color:#fff; border-radius:11px; font-size:11px; font-weight:700; padding:2px 9px; }
+    .mg-member .zero { margin-left:auto; font-size:12px; color:#ccc; }
+    .mg-search { width:100%; margin-bottom:6px; padding:8px 10px; border:1px solid #e2e2e8; border-radius:8px; font-size:12px; }
+
+    /* 레드닷 */
+    .reddot { width:8px; height:8px; border-radius:50%; background:#f0455a; display:inline-block; flex-shrink:0; }
+
+    /* 내 상담 채널 서브탭 */
+    .subtab-group { display:flex; margin:0 12px 8px; gap:4px; }
+    .subtab { flex:1; padding:6px; border:1px solid #eee; border-radius:7px; background:#fafafa; cursor:pointer; font-size:12px; color:#666; }
+    .subtab.active { background:#eef; color:#3a3de8; border-color:#cdd; font-weight:600; }
+
+    /* 상담방 카드 */
+    .room { display:flex; gap:10px; padding:12px 14px; border-bottom:1px solid #f2f2f2; cursor:pointer; position:relative; }
+    .room:hover { background:#fafaff; }
+    .room.unanswered { background:#fdeeee; }
+    .room.unanswered:hover { background:#fbe5e5; }
+    .room .av { width:40px; height:40px; border-radius:50%; background:#e6e6ef; flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center; font-size:14px; color:#778; }
+    .room .av .nd { position:absolute; top:-1px; right:-1px; width:12px; height:12px; border-radius:50%; background:#f0455a; border:2px solid #fff; }
+    .room .body { flex:1; min-width:0; }
+    .room .top { display:flex; align-items:center; gap:6px; }
+    .room .nm { font-weight:700; font-size:13px; }
+    .room .ch { font-size:10px; padding:1px 6px; border-radius:4px; background:#eef; color:#5558cf; }
+    .room .ch.tm { background:#fef0e6; color:#d98300; }
+    .room .time { margin-left:auto; font-size:11px; color:#bbb; }
+    .room .msg { font-size:12px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:3px; padding-right:70px; }
+    .room .tags { margin-top:6px; display:flex; gap:6px; align-items:center; }
+    .room .st { font-size:11px; padding:2px 7px; border-radius:4px; background:#f0f0f0; color:#777; }
+    .room .un-flag { font-size:11px; color:#d24; font-weight:700; }
+    .room .new-flag { font-size:11px; color:#f0455a; font-weight:700; }
+    .room.sel { background:#eef0ff; }
+    .room.sel.unanswered { background:#fbe0e0; }
+
+    /* 채팅방 뷰 */
+    .room-info { display:flex; align-items:center; gap:8px; }
+    .room-info .nm { font-weight:700; font-size:14px; color:#333; }
+    .room-info .phone-sm { font-size:12px; color:#999; }
+    .room-info .ch { font-size:10px; padding:1px 6px; border-radius:4px; background:#eef; color:#5558cf; }
+    .room-info .ch.tm { background:#fef0e6; color:#d98300; }
+    .room-info .st { font-size:11px; padding:2px 7px; border-radius:4px; background:#f0f0f0; color:#777; }
+    .btn-clear-room { margin-left:auto; padding:7px 13px; border:1px solid #f3b0b0; color:#d24; background:#fff; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; }
+    .btn-clear-room:hover { background:#fdecec; }
+    .un-banner { background:#fdeeee; color:#d24; font-size:12px; padding:7px 14px; text-align:center; }
+    .chat-msgs { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:10px; background:#fbfbfd; }
+    .bubble { max-width:70%; padding:9px 13px; border-radius:12px; font-size:13px; line-height:1.45; }
+    .bubble.cust { align-self:flex-start; background:#fff; border:1px solid #eee; color:#333; }
+    .bubble.agent { align-self:flex-end; background:#3a3de8; color:#fff; }
+    .bubble .meta { display:block; font-size:10px; opacity:.7; margin-top:4px; }
+    .chat-input { height:56px; border-top:1px solid #e8e8e8; background:#f9f9fb; display:flex; align-items:center; padding:0 14px; gap:8px; }
+    .chat-input input { flex:1; padding:10px 12px; border:1px solid #e2e2e8; border-radius:8px; font-size:13px; }
+    .chat-input .send { padding:10px 16px; background:#3a3de8; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+
+    /* ── 상담방 목록 ── */
+    .chat-list-panel { width: 300px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; overflow: hidden; }
+    .panel-header { padding: 16px 14px 8px; display: flex; align-items: center; justify-content: space-between; }
+    .panel-header h2 { font-size: 16px; font-weight: 700; }
+    .panel-header button { background: none; border: none; cursor: pointer; color: #aaa; font-size: 18px; }
+    .tab-group { display: flex; margin: 0 12px 8px; gap: 4px; }
+    .tab-btn { flex: 1; padding: 7px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; color: #444; }
+    .tab-btn.active { background: #3a3de8; color: #fff; border-color: #3a3de8; }
+    .status-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; }
+    .tag { padding: 4px 12px; border: 1px solid #ddd; border-radius: 20px; font-size: 12px; color: #555; cursor: pointer; background: #fff; }
+    .tag.active { background: #3a3de8; color: #fff; border-color: #3a3de8; }
+    .tag-cnt { font-size:11px; color:#aaa; margin-left:2px; }
+    .tag.active .tag-cnt { color:#dcdcff; }
+    .room-search-wrap { padding: 0 12px 8px; }
+    .room-search { width:100%; padding:8px 12px; border:1px solid #e2e2e8; border-radius:8px; font-size:13px; }
+    .filter-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; border-top: 1px solid #f0f0f0; font-size: 12px; color: #aaa; cursor: pointer; }
+    .chat-list { flex: 1; overflow-y: auto; }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: #bbb; padding: 40px 0; }
+    .empty-icon { width: 44px; height: 44px; border: 2.5px dashed #ccc; border-radius: 8px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── 메인 채팅 ── */
+    .chat-main { flex: 1; display: flex; flex-direction: column; background: #fff; overflow: hidden; }
+    .chat-topbar { height: 48px; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; padding: 0 20px; gap: 10px; }
+    .chat-topbar .skeleton { height: 14px; background: #eee; border-radius: 4px; }
+    .chat-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #bbb; }
+    .chat-body-icon { width: 48px; height: 44px; background: #eee; border-radius: 6px; }
+    .chat-body h3 { font-size: 16px; color: #aaa; font-weight: 600; }
+    .chat-body p { font-size: 13px; color: #ccc; text-align: center; line-height: 1.6; }
+    .chat-footer { height: 56px; border-top: 1px solid #e8e8e8; background: #f9f9fb; }
+    .right-panel { width: 240px; border-left: 1px solid #e0e0e0; background: #fff; }
+
+    /* ── 뷰 전환 ── */
+    .view { display: none; flex: 1; }
+    .view.active { display: flex; }
+
+    /* ── 구성원 사이드바 ── */
+    .members-sidebar { width: 240px; background: #f8f8fb; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
+    .members-sidebar .inbox-header { padding: 18px 16px 4px; }
+    .members-sidebar .sub-note { padding: 0 16px 12px; font-size: 11px; color: #aaa; }
+
+    /* ── 구성원 메인 ── */
+    .members-main { flex: 1; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+    .members-topbar { padding: 18px 24px 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; }
+    .members-topbar h1 { font-size: 20px; font-weight: 700; }
+    .members-topbar .sub { font-size: 12px; color: #999; }
+    .members-stat { display: flex; gap: 8px; margin-left: auto; }
+    .stat-card { background: #f7f7fb; border: 1px solid #eee; border-radius: 8px; padding: 6px 14px; font-size: 12px; color: #777; }
+    .stat-card b { display: block; font-size: 18px; color: #333; margin-top: 2px; }
+
+    /* ── 필터(4단계) ── */
+    .filter-panel { padding: 14px 24px 6px; border-bottom: 1px solid #f0f0f0; }
+    .filter-line { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .filter-label { width: 64px; font-size: 12px; color: #999; flex-shrink: 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { padding: 4px 12px; border: 1px solid #ddd; border-radius: 20px; font-size: 12px; color: #555; cursor: pointer; background: #fff; }
+    .chip.active { background: #3a3de8; color: #fff; border-color: #3a3de8; }
+    .filter-foot { display: flex; align-items: center; gap: 10px; padding-top: 4px; }
+    .search-box { flex: 1; max-width: 280px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .btn-reset { padding: 8px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #666; cursor: pointer; font-size: 13px; }
+    .btn-reset:hover { background: #f3f3f3; }
+
+    /* ── 테이블 ── */
+    .members-table-wrap { flex: 1; overflow-y: auto; padding: 8px 24px 24px; }
+    table.members { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.members th { text-align: left; padding: 10px 12px; color: #999; font-weight: 600; font-size: 12px; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; }
+    table.members td { padding: 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+    table.members tr:hover td { background: #fafaff; }
+    .m-name { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+    .m-avatar { width: 30px; height: 30px; border-radius: 50%; background: #dde; flex-shrink: 0; display:flex; align-items:center; justify-content:center; font-size:12px; color:#667; }
+    .badge-role { display:inline-block; padding:2px 8px; border-radius:5px; font-size:11px; background:#eef; color:#5558cf; }
+    .badge-role.consultant { background:#f1f1f1; color:#777; }
+    .status-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .status-active { background: #e6f7ee; color: #1a9c5b; }
+    .status-resigned { background: #f0f0f0; color: #999; }
+    .row-resigned td { color: #aaa; }
+    .actions { display: flex; gap: 6px; }
+    .btn-act { padding: 5px 11px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid #ddd; background: #fff; color: #444; }
+    .btn-act:hover { background: #f3f3f3; }
+    .btn-resign { border-color: #f3b0b0; color: #d24; }
+    .btn-resign:hover { background: #fdecec; }
+    .btn-reinstate { border-color: #b6d6c4; color: #1a9c5b; }
+    .btn-reinstate:hover { background: #ecf8f1; }
+    .btn-act:disabled { background:#f5f5f5; color:#bbb; border-color:#e5e5e5; cursor:not-allowed; }
+    .btn-act:disabled:hover { background:#f5f5f5; }
+    .empty-row td { text-align:center; color:#bbb; padding:40px 0; }
+    .u-num { color:#f0455a; font-weight:700; }
+    .z-num { color:#ccc; }
+    .resigned-tag { font-size:12px; color:#bbb; }
+
+    /* 구성원 상세 패널 */
+    .member-detail { width:300px; border-left:1px solid #e0e0e0; background:#fff; display:none; flex-direction:column; }
+    .member-detail.show { display:flex; }
+    .md-head { padding:18px 20px 16px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px; }
+    .md-head .av { width:46px; height:46px; border-radius:50%; background:#dde; display:flex; align-items:center; justify-content:center; font-size:18px; color:#667; flex-shrink:0; }
+    .md-head .nm { font-size:16px; font-weight:700; }
+    .md-head .role { font-size:12px; color:#888; }
+    .md-close { margin-left:auto; cursor:pointer; color:#bbb; font-size:20px; background:none; border:none; align-self:flex-start; }
+    .md-body { flex:1; overflow-y:auto; padding:16px 20px; }
+    .md-stats { display:flex; gap:8px; margin-bottom:16px; }
+    .md-stats .c { flex:1; background:#f7f7fb; border:1px solid #eee; border-radius:8px; padding:10px; text-align:center; font-size:12px; color:#888; }
+    .md-stats .c b { display:block; font-size:20px; margin-top:2px; color:#333; }
+    .md-stats .c.unread b { color:#f0455a; }
+    .md-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f3f3f3; font-size:13px; }
+    .md-row .k { color:#999; }
+    .md-section-t { font-size:12px; font-weight:700; color:#666; margin:18px 0 8px; }
+    .md-room { display:flex; align-items:center; gap:8px; padding:9px 10px; border:1px solid #f0f0f0; border-radius:8px; margin-bottom:6px; }
+    .md-room .rn { font-size:13px; font-weight:600; }
+    .md-room .rc { font-size:10px; padding:1px 6px; border-radius:4px; background:#eef; color:#5558cf; }
+    .md-room .rc.tm { background:#fef0e6; color:#d98300; }
+    .md-room .un { margin-left:auto; font-size:11px; color:#d24; font-weight:700; }
+    .md-empty { font-size:12px; color:#bbb; padding:6px 0; }
+    .hist { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #f3f3f3; }
+    .hist .hd { font-size:11px; color:#aaa; flex-shrink:0; width:64px; }
+    .hist .ht { font-size:12px; color:#444; line-height:1.45; }
+    .hist .ht b { font-weight:700; }
+    .hist .hsub { color:#888; margin-top:2px; }
+    .hist.out { border-left:3px solid #f0455a; padding-left:8px; }
+    .hist.in { border-left:3px solid #1a9c5b; padding-left:8px; }
+    .md-foot { padding:14px 20px; border-top:1px solid #eee; }
+    .md-foot button { width:100%; padding:10px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+    .md-foot .resign { background:#fff; border:1px solid #f3b0b0; color:#d24; }
+    .md-foot .resign:hover { background:#fdecec; }
+    .md-foot .reinstate { background:#fff; border:1px solid #b6d6c4; color:#1a9c5b; }
+    .md-foot .reinstate:hover { background:#ecf8f1; }
+    .btn-reinstate-confirm { background:#1a9c5b !important; }
+
+    /* 모달 select */
+    .modal-select { width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:13px; margin-bottom:6px; }
+    #reassign-block { margin-bottom:16px; }
+    .reassign-hint { font-size:11px; color:#aaa; margin:6px 0 0; line-height:1.4; }
+    .reassign-mode { display:flex; flex-wrap:wrap; gap:8px 12px; margin-bottom:8px; }
+    .reassign-mode label { display:flex; align-items:center; gap:5px; font-size:12px; color:#555; cursor:pointer; }
+
+    /* 토스트 */
+    #toast { position:fixed; left:50%; bottom:32px; transform:translateX(-50%) translateY(20px); background:#2b2b2b; color:#fff; font-size:13px; padding:11px 12px 11px 18px; border-radius:10px; opacity:0; pointer-events:none; transition:all .25s; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,.25); display:flex; align-items:center; gap:14px; }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+    #toast-undo { background:none; border:none; color:#7df3c0; font-size:13px; font-weight:700; cursor:pointer; padding:2px 8px; }
+    #toast-undo.hide { display:none; }
+    #even-preview { display:none; background:#f7f7fb; border:1px solid #eee; border-radius:8px; padding:10px; }
+    #even-preview .ep-row { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:#444; }
+    #even-preview .ep-row .g { color:#1a9c5b; font-weight:700; }
+    #even-preview .ep-empty { font-size:12px; color:#aaa; }
+
+    /* 모달 */
+    .modal-back { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); align-items:center; justify-content:center; z-index:100; }
+    .modal-back.show { display:flex; }
+    .modal { background:#fff; border-radius:12px; padding:24px; width:360px; }
+    .modal h3 { font-size:16px; margin-bottom:6px; }
+    .modal p { font-size:13px; color:#777; margin-bottom:16px; line-height:1.5; }
+    .modal label { font-size:12px; color:#888; display:block; margin-bottom:4px; }
+    .modal input { width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:13px; margin-bottom:16px; }
+    .modal .warn { background:#fff7f7; border:1px solid #f3d6d6; color:#c0392b; font-size:12px; padding:8px 10px; border-radius:8px; margin-bottom:16px; line-height:1.5; }
+    .modal-btns { display:flex; gap:8px; justify-content:flex-end; }
+    .modal-btns button { padding:8px 16px; border-radius:8px; font-size:13px; cursor:pointer; border:none; }
+    .btn-cancel { background:#eee; color:#555; }
+    .btn-confirm { background:#d24; color:#fff; }
+  </style>
+</head>
+<body>
+
+  <!-- 아이콘 사이드바 -->
+  <aside class="icon-sidebar">
+    <button class="icon-btn active" data-view="inbox">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span class="tip">수신함</span>
+    </button>
+    <button class="icon-btn" data-view="members">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span class="tip">구성원</span>
+    </button>
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <button class="avatar-btn"><span>👤</span><span class="badge"></span></button>
+      <span class="avatar-label">미연결</span>
+    </div>
+    <div class="icon-sidebar-bottom">
+      <button class="icon-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></button>
+      <button class="icon-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 005 14.7a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.7a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009.3 4.4a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9.3a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+      <div class="divider" style="width:24px;margin:4px 0;"></div>
+      <button class="icon-btn"><svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2v-1"/></svg></button>
+    </div>
+  </aside>
+
+  <!-- ====== 뷰 A: 수신함 ====== -->
+  <div class="view active" id="view-inbox">
+    <aside class="inbox-sidebar">
+      <div class="inbox-header">수신함</div>
+      <button class="btn-start">업무 시작하기</button>
+      <div class="toggle-row"><span>자동 배정</span><span><span class="toggle-badge">OFF</span> ›</span></div>
+      <div class="sidebar-scroll">
+        <div class="section-title">내 담당</div>
+        <div class="nav-item active" data-mine="all"><span class="label"><span class="icon-box"></span> 내 상담</span><span class="count" id="cnt-mine">0</span></div>
+        <div class="nav-item" data-mine="new"><span class="label"><span class="reddot"></span> 신규 인입 메시지</span><span class="count-badge" id="cnt-new">0</span></div>
+        <div class="nav-item" data-mine="unanswered"><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge" id="cnt-unans">0</span></div>
+        <div class="divider"></div>
+        <div class="section-title">팀 전체</div>
+        <div class="nav-item"><span class="label"><span class="icon-box"></span> 전체</span><span class="count">999+</span></div>
+        <div class="nav-item"><span class="label"><span class="icon-box"></span> 미배정</span><span class="count">4</span></div>
+        <div class="nav-item sub-item"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count">0</span></div>
+        <div class="nav-item sub-item"><span class="label"><span class="icon-box"></span> 전화</span><span class="count">4</span></div>
+        <div class="divider"></div>
+        <div class="group-header"><span>그룹 25</span><button>∧</button></div>
+        <div class="group-item"><span class="group-avatar"></span><span class="group-name">AM렌탈 공식몰</span></div>
+        <div class="group-item"><span class="group-avatar"></span><span class="group-name">BS렌탈 공식몰</span></div>
+        <div class="group-item"><span class="group-avatar"></span><span class="group-name">CS렌탈 공식몰</span></div>
+        <div class="divider"></div>
+
+        <!-- 구성원 그룹핑 (카테고리 + 미답변) -->
+        <div class="mg-panel">
+          <div class="mg-head" id="mg-head">
+            <span class="t">구성원</span><span class="n" id="mg-count">0</span>
+            <span class="unread-total" id="mg-unread">미답변 0</span>
+            <span class="arrow" id="mg-arrow">∧</span>
+          </div>
+          <select class="mg-select" id="mg-state">
+            <option value="">재직 상태: 전체</option>
+            <option value="active">재직 상태: 재직자</option>
+            <option value="resigned">재직 상태: 퇴사자</option>
+          </select>
+          <select class="mg-select" id="mg-cat">
+            <option value="">카테고리: 전체</option>
+          </select>
+          <input class="mg-search" id="mg-searchbox" placeholder="🔍 상담원 검색" />
+          <div class="mg-btns">
+            <button id="mg-apply">적용</button>
+            <button id="mg-allbtn">전체</button>
+            <button id="mg-reset">초기화</button>
+          </div>
+          <div class="mg-check">
+            <label><input type="checkbox" id="mg-unreadonly"> 미답변만 보기</label>
+            <span class="mg-sort" id="mg-sort">미답변순 ↓</span>
+          </div>
+          <div class="mg-tree" id="mg-tree"></div>
+        </div>
+      </div>
+    </aside>
+    <section class="chat-list-panel">
+      <div class="panel-header"><h2 id="chat-title">내 상담</h2><button>🔍</button></div>
+      <div class="tab-group"><button class="tab-btn active">진행중</button><button class="tab-btn">종료</button></div>
+      <div class="subtab-group" id="channel-tabs">
+        <button class="subtab active" data-ch="">전체</button>
+        <button class="subtab" data-ch="채팅">채팅</button>
+        <button class="subtab" data-ch="전화">전화(TM)</button>
+      </div>
+      <div class="status-tags" id="status-tags">
+        <button class="tag active" data-status="">전체</button>
+        <button class="tag" data-status="상담중">상담중</button>
+        <button class="tag" data-status="주문확정">주문확정</button>
+        <button class="tag" data-status="설치대기">설치대기</button>
+        <button class="tag" data-status="지원금대기">지원금대기</button>
+        <button class="tag" data-status="계약완료">계약완료</button>
+      </div>
+      <div class="room-search-wrap">
+        <input id="room-search" class="room-search" placeholder="🔍 채팅방 검색 (이름 / 전화번호)" />
+      </div>
+      <div class="filter-row"><span>필터 0</span><span>▼</span></div>
+      <div class="chat-list" id="chat-list"></div>
+    </section>
+    <main class="chat-main" id="chat-main"></main>
+    <aside class="right-panel"></aside>
+  </div>
+
+  <!-- ====== 뷰 B: 구성원 ====== -->
+  <div class="view" id="view-members">
+    <aside class="members-sidebar">
+      <div class="inbox-header">구성원</div>
+      <div class="sub-note">수퍼바이저 전용 · 컨설턴트는 본인만 조회</div>
+      <div class="sidebar-scroll">
+        <div class="section-title">바로가기</div>
+        <div class="nav-item active" data-quick="all"><span class="label"><span class="icon-box"></span> 전체 구성원</span><span class="count" id="q-all">0</span></div>
+        <div class="nav-item" data-quick="active"><span class="label"><span class="icon-box"></span> 재직자</span><span class="count" id="q-active">0</span></div>
+        <div class="nav-item" data-quick="resigned"><span class="label"><span class="icon-box"></span> 퇴사자</span><span class="count" id="q-resigned">0</span></div>
+      </div>
+    </aside>
+
+    <main class="members-main">
+      <div class="members-topbar">
+        <h1>구성원</h1>
+        <span class="sub">파파 그룹핑 · 재직/퇴사 관리</span>
+        <div class="members-stat">
+          <div class="stat-card">재직자 <b id="stat-active">0</b></div>
+          <div class="stat-card">퇴사자 <b id="stat-resigned">0</b></div>
+        </div>
+      </div>
+
+      <!-- 4단계 필터 -->
+      <div class="filter-panel">
+        <div class="filter-line">
+          <span class="filter-label">재직상태</span>
+          <div class="chips" data-group="status">
+            <button class="chip active" data-v="">전체</button>
+            <button class="chip" data-v="active">재직자</button>
+            <button class="chip" data-v="resigned">퇴사자</button>
+          </div>
+        </div>
+        <div class="filter-line">
+          <span class="filter-label">역할</span>
+          <div class="chips" data-group="role">
+            <button class="chip active" data-v="">전체</button>
+            <button class="chip" data-v="관리자">관리자</button>
+            <button class="chip" data-v="컨설턴트">컨설턴트</button>
+          </div>
+        </div>
+        <div class="filter-line">
+          <span class="filter-label">상담수단</span>
+          <div class="chips" data-group="channel">
+            <button class="chip active" data-v="">전체</button>
+            <button class="chip" data-v="전화">전화(TM)</button>
+            <button class="chip" data-v="채팅">채팅</button>
+          </div>
+        </div>
+        <div class="filter-line">
+          <span class="filter-label">제품</span>
+          <div class="chips" data-group="category">
+            <button class="chip active" data-v="">전체</button>
+            <button class="chip" data-v="가전">가전</button>
+            <button class="chip" data-v="정수기">정수기</button>
+            <button class="chip" data-v="TPS">TPS</button>
+            <button class="chip" data-v="상조">상조</button>
+            <button class="chip" data-v="이사">이사</button>
+            <button class="chip" data-v="기타">기타</button>
+          </div>
+        </div>
+        <div class="filter-foot">
+          <input class="search-box" id="search" placeholder="이름 검색" />
+          <button class="btn-reset" id="reset">초기화</button>
+        </div>
+      </div>
+
+      <div class="members-table-wrap" id="members-table-wrap">
+        <table class="members">
+          <thead>
+            <tr>
+              <th style="width:18%">이름</th>
+              <th style="width:10%">역할</th>
+              <th style="width:11%">상담수단</th>
+              <th style="width:10%">제품</th>
+              <th style="width:8%">담당</th>
+              <th style="width:9%">미답변</th>
+              <th style="width:9%">상태</th>
+              <th style="width:11%">퇴사일</th>
+              <th style="width:14%">관리</th>
+            </tr>
+          </thead>
+          <tbody id="members-body"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- 구성원 상세 패널 -->
+    <aside class="member-detail" id="member-detail"></aside>
+  </div>
+
+  <div id="toast"><span id="toast-msg"></span><button id="toast-undo">실행취소</button></div>
+
+  <!-- 모달 -->
+  <div class="modal-back" id="modal">
+    <div class="modal">
+      <h3 id="modal-title">퇴사 처리</h3>
+      <p id="modal-desc"></p>
+      <div id="resign-fields">
+        <label>퇴사일</label>
+        <input type="date" id="modal-date" />
+        <div id="reassign-block">
+          <label>담당 채팅방 이관 (<span id="reassign-count">0</span>건)</label>
+          <div class="reassign-mode">
+            <label><input type="radio" name="rmode" value="single" checked> 한 명에게 이관</label>
+            <label><input type="radio" name="rmode" value="even"> 균등 분배</label>
+            <label><input type="radio" name="rmode" value="weighted"> 가중 분배(부하↓ 우선)</label>
+          </div>
+          <select class="modal-select" id="reassign-target"></select>
+          <div id="even-preview"></div>
+          <p class="reassign-hint">채팅방·미답변이 함께 이관됩니다. '이관 안 함' 선택 시 미배정으로 남습니다.</p>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">취소</button>
+        <button class="btn-confirm" id="modal-confirm">퇴사 처리</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── 뷰 전환 ──
+    document.querySelectorAll('.icon-btn[data-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.icon-btn[data-view]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-' + btn.dataset.view).classList.add('active');
+      });
+    });
+
+    // ── 구성원 데이터 (기획안 원본 DB 기반) ──
+    // state: active=재직 / resigned=퇴사, role: 관리자/컨설턴트, channel: 전화/채팅/'', category: 제품
+    let members = [
+      { name:'김용일', state:'active',   role:'컨설턴트', channel:'채팅', category:'가전',   leave:'', unread:17, assigned:42 },
+      { name:'김민강', state:'active',   role:'컨설턴트', channel:'채팅', category:'가전',   leave:'', unread:3,  assigned:30 },
+      { name:'서현동', state:'active',   role:'관리자',   channel:'',     category:'',       leave:'', unread:0,  assigned:0 },
+      { name:'렌트리', state:'active',   role:'관리자',   channel:'',     category:'',       leave:'', unread:0,  assigned:0 },
+      { name:'이수지', state:'active',   role:'관리자',   channel:'',     category:'',       leave:'', unread:0,  assigned:0 },
+      { name:'변슬기', state:'active',   role:'관리자',   channel:'',     category:'',       leave:'', unread:0,  assigned:0 },
+      { name:'최송임', state:'active',   role:'관리자',   channel:'',     category:'',       leave:'', unread:0,  assigned:0 },
+      { name:'헬로비전', state:'active', role:'관리자',   channel:'',     category:'',       leave:'', unread:0,  assigned:0 },
+      { name:'윤민혁', state:'active',   role:'컨설턴트', channel:'채팅', category:'기타',   leave:'', unread:1,  assigned:8 },
+      { name:'곽예진', state:'active',   role:'컨설턴트', channel:'채팅', category:'TPS',    leave:'', unread:6,  assigned:35 },
+      { name:'전상엽', state:'active',   role:'컨설턴트', channel:'채팅', category:'TPS',    leave:'', unread:2,  assigned:28 },
+      { name:'강소정', state:'active',   role:'컨설턴트', channel:'채팅', category:'TPS',    leave:'', unread:12, assigned:40 },
+      { name:'윤승현', state:'active',   role:'컨설턴트', channel:'전화', category:'',       leave:'', unread:0,  assigned:20 },
+      { name:'정다운', state:'active',   role:'컨설턴트', channel:'채팅', category:'TPS',    leave:'', unread:4,  assigned:33 },
+      { name:'채새미', state:'active',   role:'컨설턴트', channel:'채팅', category:'TPS',    leave:'', unread:4,  assigned:31 },
+      { name:'길수진', state:'active',   role:'컨설턴트', channel:'전화', category:'',       leave:'', unread:0,  assigned:18 },
+      { name:'김성은', state:'resigned', role:'컨설턴트', channel:'채팅', category:'정수기', leave:'2025-11-30', unread:9, assigned:25 },
+      { name:'김시인', state:'active',   role:'컨설턴트', channel:'채팅', category:'정수기', leave:'', unread:5,  assigned:27 },
+      { name:'임은경', state:'resigned', role:'컨설턴트', channel:'채팅', category:'정수기', leave:'2025-09-15', unread:2, assigned:14 },
+      { name:'양송아', state:'active',   role:'컨설턴트', channel:'채팅', category:'정수기', leave:'', unread:0,  assigned:22 },
+    ];
+
+    // 사이드바 그룹핑용: 표시 그룹 결정
+    function grpOf(m) {
+      if (m.role === '관리자') return '관리자';
+      if (m.channel === '전화') return 'TM';
+      return m.category || '기타';
+    }
+    const CAT_ORDER = ['가전','정수기','TPS','TM','상조','이사','기타','관리자'];
+
+    const filters = { status:'', role:'', channel:'', category:'' };
+    let pending = null;
+    const stateLabel = { active:'재직', resigned:'퇴사' };
+
+    function render() {
+      const body = document.getElementById('members-body');
+      const q = document.getElementById('search').value.trim();
+      body.innerHTML = '';
+      let shown = 0;
+      members.forEach((m, idx) => {
+        if (filters.status && m.state !== filters.status) return;
+        if (filters.role && m.role !== filters.role) return;
+        if (filters.channel && m.channel !== filters.channel) return;
+        if (filters.category && m.category !== filters.category) return;
+        if (q && !m.name.includes(q)) return;
+        shown++;
+
+        const tr = document.createElement('tr');
+        if (m.state === 'resigned') tr.className = 'row-resigned';
+        const roleCls = m.role === '관리자' ? '' : 'consultant';
+        const statusCls = m.state === 'resigned' ? 'status-resigned' : 'status-active';
+        let actions = m.state === 'active'
+          ? `<button class="btn-act btn-resign" onclick="openModal(${idx}, event)">퇴사 처리</button>`
+          : `<span class="resigned-tag">퇴사 완료</span>`;
+        const unreadCell = m.unread > 0 ? `<span class="u-num">${m.unread}</span>` : '<span class="z-num">0</span>';
+
+        tr.innerHTML = `
+          <td><div class="m-name"><span class="m-avatar">${m.name[0]}</span>${m.name}</div></td>
+          <td><span class="badge-role ${roleCls}">${m.role}</span></td>
+          <td>${m.channel || '-'}</td>
+          <td>${m.category || '-'}</td>
+          <td>${m.assigned || '-'}</td>
+          <td>${unreadCell}</td>
+          <td><span class="status-pill ${statusCls}">${stateLabel[m.state]}</span></td>
+          <td>${m.leave || '-'}</td>
+          <td><div class="actions">${actions}</div></td>`;
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => openMemberDetail(idx));
+        body.appendChild(tr);
+      });
+      if (shown === 0) {
+        body.innerHTML = '<tr class="empty-row"><td colspan="9">조건에 맞는 구성원이 없어요.</td></tr>';
+      }
+      updateCounts();
+    }
+
+    function updateCounts() {
+      let a = 0, r = 0;
+      members.forEach(m => m.state === 'active' ? a++ : r++);
+      document.getElementById('q-all').textContent = members.length;
+      document.getElementById('q-active').textContent = a;
+      document.getElementById('q-resigned').textContent = r;
+      document.getElementById('stat-active').textContent = a;
+      document.getElementById('stat-resigned').textContent = r;
+    }
+
+    // ── 필터 칩 ──
+    document.querySelectorAll('.chips').forEach(group => {
+      group.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          filters[group.dataset.group] = chip.dataset.v;
+          syncQuick();
+          render();
+        });
+      });
+    });
+
+    // ── 사이드바 바로가기 (재직상태 필터와 연동) ──
+    document.querySelectorAll('#view-members .nav-item').forEach(it => {
+      it.addEventListener('click', () => {
+        const v = it.dataset.quick === 'all' ? '' : it.dataset.quick;
+        filters.status = v;
+        const grp = document.querySelector('.chips[data-group="status"]');
+        grp.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.v === v));
+        syncQuick();
+        render();
+      });
+    });
+    function syncQuick() {
+      document.querySelectorAll('#view-members .nav-item').forEach(it => {
+        const v = it.dataset.quick === 'all' ? '' : it.dataset.quick;
+        it.classList.toggle('active', v === filters.status);
+      });
+    }
+
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('reset').addEventListener('click', () => {
+      filters.status = filters.role = filters.channel = filters.category = '';
+      document.querySelectorAll('.chips').forEach(g => {
+        g.querySelectorAll('.chip').forEach((c,i) => c.classList.toggle('active', i === 0));
+      });
+      document.getElementById('search').value = '';
+      syncQuick();
+      render();
+    });
+
+    // ── 퇴사/복직 모달 ──
+    let pendingMode = 'resign';
+    const confirmBtn = document.getElementById('modal-confirm');
+
+    function openModal(idx, ev) {  // 퇴사
+      if (ev) ev.stopPropagation();
+      pending = idx; pendingMode = 'resign';
+      const m = members[idx];
+      document.getElementById('modal-title').textContent = '퇴사 처리';
+      document.getElementById('modal-desc').textContent =
+        `${m.name} 님(${m.role}${m.category ? ' · ' + m.category : ''})을 퇴사 처리합니다.`;
+      document.getElementById('resign-fields').style.display = '';
+      document.getElementById('modal-date').value = new Date().toISOString().slice(0,10);
+      confirmBtn.textContent = '퇴사 처리';
+      confirmBtn.classList.remove('btn-reinstate-confirm');
+
+      const block = document.getElementById('reassign-block');
+      const sel = document.getElementById('reassign-target');
+      document.getElementById('reassign-count').textContent = m.assigned;
+      if (m.assigned > 0) {
+        block.style.display = '';
+        const cands = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트');
+        cands.sort((a,b) => (b.category === m.category) - (a.category === m.category) || a.assigned - b.assigned);
+        sel.innerHTML = '<option value="-1">이관 안 함 (미배정)</option>' +
+          cands.map(c => `<option value="${members.indexOf(c)}">${c.name} · ${c.category || c.channel || '-'} (담당 ${c.assigned})</option>`).join('');
+        document.querySelector('input[name=rmode][value=single]').checked = true;
+        updateReassignMode();
+      } else {
+        block.style.display = 'none';
+      }
+      document.getElementById('modal').classList.add('show');
+    }
+
+    // 균등 분배 대상: 같은 카테고리 재직 컨설턴트 우선, 없으면 전체 재직 컨설턴트
+    function evenCandidates(idx) {
+      const m = members[idx];
+      let c = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트' && x.category === m.category);
+      if (!c.length) c = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트');
+      return c;
+    }
+    function splitN(total, n) {
+      const base = Math.floor(total / n), rem = total % n;
+      return Array.from({length:n}, (_, i) => base + (i < rem ? 1 : 0));
+    }
+    // 가중(water-filling): 현재 부하 적은 사람부터 1건씩 채워 부하를 평준화
+    function allocWeighted(total, loads) {
+      const cur = loads.slice();
+      const add = loads.map(() => 0);
+      for (let k = 0; k < total; k++) {
+        let mi = 0;
+        for (let i = 1; i < cur.length; i++) if (cur[i] < cur[mi]) mi = i;
+        cur[mi]++; add[mi]++;
+      }
+      return add;
+    }
+    function getRMode() { return document.querySelector('input[name=rmode]:checked').value; }
+
+    // 토스트 (+ 실행취소)
+    let toastTimer = null;
+    function showToast(msg, undoFn) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      const undoBtn = document.getElementById('toast-undo');
+      undoBtn.onclick = null;
+      if (undoFn) {
+        undoBtn.classList.remove('hide');
+        undoBtn.onclick = () => { undoFn(); };
+      } else {
+        undoBtn.classList.add('hide');
+      }
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), undoFn ? 5000 : 2600);
+    }
+
+    function updateReassignMode() {
+      const mode = getRMode();
+      const sel = document.getElementById('reassign-target');
+      const prev = document.getElementById('even-preview');
+      if (mode === 'even' || mode === 'weighted') {
+        sel.style.display = 'none';
+        prev.style.display = '';
+        const m = members[pending];
+        const cands = evenCandidates(pending);
+        if (!cands.length) { prev.innerHTML = '<div class="ep-empty">분배할 재직 컨설턴트가 없어요.</div>'; return; }
+        let shareA, shareU;
+        if (mode === 'weighted') {
+          shareA = allocWeighted(m.assigned, cands.map(c => c.assigned));
+          shareU = allocWeighted(m.unread, cands.map(c => c.unread));
+        } else {
+          shareA = splitN(m.assigned, cands.length);
+          shareU = splitN(m.unread, cands.length);
+        }
+        prev.innerHTML = cands.map((c,i) =>
+          `<div class="ep-row"><span>${c.name} <span style="color:#aaa">(담당 ${c.assigned})</span></span>
+           <span class="g">+${shareA[i]}건${shareU[i]?` · 미답변 +${shareU[i]}`:''}</span></div>`).join('');
+      } else {
+        sel.style.display = '';
+        prev.style.display = 'none';
+      }
+    }
+    document.querySelectorAll('input[name=rmode]').forEach(r => r.addEventListener('change', updateReassignMode));
+
+    function closeModal() { document.getElementById('modal').classList.remove('show'); pending = null; }
+
+    confirmBtn.addEventListener('click', () => {
+      if (pending === null) return;
+      const snapshot = JSON.parse(JSON.stringify(members));  // 실행취소용
+      const m = members[pending];
+      const today = new Date().toISOString().slice(0,10);
+      let toast = '';
+      let targets = [];      // [{name, assigned, unread}]
+      let modeLabel = '';
+      const cnt = m.assigned;
+      if (m.assigned > 0) {
+        const mode = getRMode();
+        if (mode === 'even' || mode === 'weighted') {
+          modeLabel = mode === 'weighted' ? '가중 분배' : '균등 분배';
+          const cands = evenCandidates(pending);
+          if (cands.length) {
+            const sA = mode === 'weighted' ? allocWeighted(m.assigned, cands.map(c=>c.assigned)) : splitN(m.assigned, cands.length);
+            const sU = mode === 'weighted' ? allocWeighted(m.unread, cands.map(c=>c.unread)) : splitN(m.unread, cands.length);
+            cands.forEach((c,i) => { c.assigned += sA[i]; c.unread += sU[i]; if (sA[i] > 0) targets.push({name:c.name, assigned:sA[i], unread:sU[i]}); });
+            toast = `${cnt}건을 ${cands.length}명에게 ${modeLabel}했어요`;
+          } else { toast = `이관 대상이 없어 ${cnt}건이 미배정으로 남았어요`; modeLabel = '미배정'; }
+        } else {
+          modeLabel = '단일 이관';
+          const ti = parseInt(document.getElementById('reassign-target').value, 10);
+          if (ti >= 0 && members[ti]) {
+            members[ti].assigned += m.assigned;
+            members[ti].unread += m.unread;
+            targets.push({name:members[ti].name, assigned:m.assigned, unread:m.unread});
+            toast = `${cnt}건을 ${members[ti].name} 님에게 이관했어요`;
+          } else { toast = `${cnt}건이 미배정으로 남았어요`; modeLabel = '미배정'; }
+        }
+        m.assigned = 0; m.unread = 0;
+      } else { toast = `${m.name} 님 퇴사 처리 완료`; }
+      m.state = 'resigned';
+      m.leave = document.getElementById('modal-date').value || today;
+
+      // 이력 기록
+      m.history = m.history || [];
+      m.history.push({ date: today, kind:'out', mode: modeLabel, total: cnt, targets });
+      targets.forEach(t => {
+        const rc = members.find(x => x.name === t.name);
+        if (rc) { rc.history = rc.history || []; rc.history.push({ date: today, kind:'in', from: m.name, assigned: t.assigned, unread: t.unread }); }
+      });
+
+      const wasIdx = pending;
+      closeModal();
+      render();
+      renderTree();
+      if (detailIdx === wasIdx) openMemberDetail(wasIdx);
+      showToast(toast, () => {       // 실행취소
+        members = snapshot;
+        render(); renderTree();
+        if (detailIdx !== null) openMemberDetail(detailIdx);
+        showToast('실행취소됨');
+      });
+    });
+
+    // ── 구성원 상세 패널 ──
+    let detailIdx = null;
+    function openMemberDetail(idx) {
+      detailIdx = idx;
+      const m = members[idx];
+      const panel = document.getElementById('member-detail');
+      const myRooms = rooms.filter(r => r.owner === m.name);
+      const roomHtml = myRooms.length
+        ? myRooms.map(r => `<div class="md-room"><span class="rn">${r.cust}</span>
+            <span class="rc ${r.ch==='전화'?'tm':''}">${r.ch==='전화'?'전화':'채팅'}</span>
+            ${r.state==='unanswered'?'<span class="un">미답변</span>':''}</div>`).join('')
+        : `<div class="md-empty">표시할 담당 방 샘플이 없어요 (총 ${m.assigned}건).</div>`;
+      // 이관/수신 이력
+      const hist = (m.history || []).slice().reverse();
+      const histHtml = hist.length
+        ? hist.map(h => {
+            if (h.kind === 'out') {
+              const who = h.targets.length
+                ? h.targets.map(t => `${t.name} +${t.assigned}${t.unread?`(미답변 ${t.unread})`:''}`).join(', ')
+                : '미배정';
+              return `<div class="hist out"><span class="hd">${h.date}</span>
+                <div class="ht"><b>채팅방 ${h.total}건 이관</b> · ${h.mode}<div class="hsub">→ ${who}</div></div></div>`;
+            }
+            return `<div class="hist in"><span class="hd">${h.date}</span>
+              <div class="ht"><b>${h.from} 퇴사분 +${h.assigned}건</b> 수신${h.unread?` · 미답변 ${h.unread}`:''}</div></div>`;
+          }).join('')
+        : '<div class="md-empty">이관/수신 이력이 없어요.</div>';
+      const footBtn = m.state === 'active'
+        ? `<button class="resign" onclick="openModal(${idx}, event)">퇴사 처리</button>`
+        : `<button class="disabled" disabled>퇴사 완료 (${m.leave})</button>`;
+      panel.innerHTML = `
+        <div class="md-head">
+          <span class="av">${m.name[0]}</span>
+          <div><div class="nm">${m.name}</div><div class="role">${m.role}${m.category?' · '+m.category:''}</div></div>
+          <button class="md-close" onclick="closeMemberDetail()">×</button>
+        </div>
+        <div class="md-body">
+          <div class="md-stats">
+            <div class="c">담당 채팅방<b>${m.assigned}</b></div>
+            <div class="c unread">미답변<b>${m.unread}</b></div>
+          </div>
+          <div class="md-row"><span class="k">상태</span><span>${m.state==='resigned'?'퇴사 ('+m.leave+')':'재직중'}</span></div>
+          <div class="md-row"><span class="k">역할</span><span>${m.role}</span></div>
+          <div class="md-row"><span class="k">상담수단</span><span>${m.channel||'-'}</span></div>
+          <div class="md-row"><span class="k">제품</span><span>${m.category||'-'}</span></div>
+          <div class="md-section-t">담당 채팅방</div>
+          ${roomHtml}
+          <div class="md-section-t">이관 / 수신 이력</div>
+          ${histHtml}
+        </div>
+        <div class="md-foot">${footBtn}</div>`;
+      panel.classList.add('show');
+    }
+    function closeMemberDetail() {
+      document.getElementById('member-detail').classList.remove('show');
+      detailIdx = null;
+    }
+
+    // ========= 수신함 사이드바 구성원 그룹핑 =========
+    const tree = { state:'', cat:'', unreadOnly:false, sortByUnread:true, q:'' };
+    const treeCollapsed = new Set();  // 접힌 카테고리 기억
+
+    // 카테고리 드롭다운 채우기
+    (function fillCat(){
+      const sel = document.getElementById('mg-cat');
+      const present = CAT_ORDER.filter(c => members.some(m => grpOf(m) === c));
+      present.forEach(c => {
+        const o = document.createElement('option'); o.value = c; o.textContent = '카테고리: ' + c; sel.appendChild(o);
+      });
+    })();
+
+    // 그룹핑 레벨 정의: 역할 → 상담수단 → 카테고리
+    const LEVELS = [
+      { key:'role',     cls:'lv-role',     valOf: m => m.role,            order:['관리자','컨설턴트'] },
+      { key:'channel',  cls:'lv-channel',  valOf: m => (m.channel==='전화'?'전화(TM)':m.channel), order:['전화(TM)','채팅'] },
+      { key:'category', cls:'lv-category', valOf: m => m.category,        order:['가전','정수기','TPS','상조','이사','기타'] },
+    ];
+    const sumU = arr => arr.reduce((s,m)=>s+m.unread,0);
+
+    function memberRow(m) {
+      const el = document.createElement('div');
+      el.className = 'mg-member' + (m.unread>0?' has-unread':'') + (m.state==='resigned'?' resigned':'');
+      el.innerHTML = `
+        <span class="av"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
+        <span class="nm">${m.name}</span>
+        ${m.unread>0 ? `<span class="ub">${m.unread}</span>` : `<span class="zero">0</span>`}`;
+      return el;
+    }
+
+    // 재귀: 주어진 레벨부터 중첩 그룹 렌더
+    function renderLevel(list, lvIdx, depth, wrap) {
+      if (lvIdx >= LEVELS.length) { // 더 분류할 레벨 없음 → 멤버 출력
+        let mem = tree.sortByUnread
+          ? list.slice().sort((a,b)=>b.unread-a.unread)
+          : list.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+        mem.forEach(m => { const r = memberRow(m); r.style.paddingLeft = (4 + depth*10) + 'px'; wrap.appendChild(r); });
+        return;
+      }
+      const lv = LEVELS[lvIdx];
+      // 이 레벨 값이 전부 비어있으면 레벨 건너뜀
+      if (list.every(m => !lv.valOf(m))) { renderLevel(list, lvIdx+1, depth, wrap); return; }
+
+      let vals = [...new Set(list.map(lv.valOf).filter(Boolean))];
+      vals.sort((a,b) => {
+        if (tree.sortByUnread) {
+          return sumU(list.filter(m=>lv.valOf(m)===b)) - sumU(list.filter(m=>lv.valOf(m)===a));
+        }
+        const ia = lv.order.indexOf(a), ib = lv.order.indexOf(b);
+        return (ia<0?99:ia) - (ib<0?99:ib);
+      });
+
+      vals.forEach(v => {
+        const sub = list.filter(m => lv.valOf(m) === v);
+        const h = document.createElement('div');
+        if (lv.key === 'channel') {
+          h.className = 'mg-chan-head';
+          h.style.paddingLeft = (2 + depth*10) + 'px';
+          const c = (v.indexOf('TM') >= 0 || v.indexOf('전화') >= 0) ? 'tm' : 'chat';
+          h.innerHTML = `<span class="chip-ch ${c}">${v}</span>`;
+          wrap.appendChild(h);
+          renderLevel(sub, lvIdx+1, depth+1, wrap);
+        } else if (lv.key === 'category') {
+          // 카테고리: 접기/펼치기 토글
+          const key = 'cat:' + v + ':' + depth;
+          const collapsed = treeCollapsed.has(key);
+          h.className = 'mg-grp-head lv-category';
+          h.style.paddingLeft = (2 + depth*10) + 'px';
+          h.innerHTML = `<span class="gl">${v}</span><span class="caret">${collapsed?'▸':'▾'}</span>`;
+          const body = document.createElement('div');
+          body.className = 'mg-cat-body' + (collapsed?' collapsed':'');
+          h.addEventListener('click', () => {
+            if (treeCollapsed.has(key)) treeCollapsed.delete(key); else treeCollapsed.add(key);
+            body.classList.toggle('collapsed');
+            h.querySelector('.caret').textContent = body.classList.contains('collapsed') ? '▸' : '▾';
+          });
+          wrap.appendChild(h);
+          wrap.appendChild(body);
+          renderLevel(sub, lvIdx+1, depth+1, body);
+        } else {
+          h.className = 'mg-grp-head ' + lv.cls;
+          if (lv.key === 'role') h.className += (v === '관리자' ? ' admin' : ' consultant');
+          h.style.paddingLeft = (2 + depth*10) + 'px';
+          h.innerHTML = `<span class="gl">${v}</span>`;
+          wrap.appendChild(h);
+          renderLevel(sub, lvIdx+1, depth+1, wrap);
+        }
+      });
+    }
+
+    function renderTree() {
+      const wrap = document.getElementById('mg-tree');
+      wrap.innerHTML = '';
+
+      document.getElementById('mg-count').textContent = members.length;
+      document.getElementById('mg-unread').textContent = '미답변 ' + sumU(members);
+
+      const sections = [
+        { key:'active',   label:'재직자', cls:'' },
+        { key:'resigned', label:'퇴사자', cls:'resigned' },
+      ].filter(s => !tree.state || tree.state === s.key);
+
+      sections.forEach(sec => {
+        let list = members.filter(m => m.state === sec.key);
+        if (tree.cat) list = list.filter(m => grpOf(m) === tree.cat);
+        if (tree.unreadOnly) list = list.filter(m => m.unread > 0);
+        if (tree.q) list = list.filter(m => m.name.includes(tree.q));
+        if (list.length === 0) return;
+
+        const sh = document.createElement('div');
+        sh.className = 'mg-section-head ' + sec.cls;
+        sh.innerHTML = `<span class="dot"></span>${sec.label}
+          <span class="meta">${list.length}명 · 미답변 <span class="u">${sumU(list)}</span></span>`;
+        wrap.appendChild(sh);
+
+        renderLevel(list, 0, 1, wrap);
+      });
+
+      if (!wrap.children.length) {
+        wrap.innerHTML = '<div style="padding:14px 4px;color:#bbb;font-size:12px;text-align:center;">조건에 맞는 구성원이 없어요.</div>';
+      }
+    }
+
+    // 컨트롤
+    document.getElementById('mg-head').addEventListener('click', () => {
+      const t = document.getElementById('mg-tree');
+      t.classList.toggle('collapsed');
+      document.getElementById('mg-arrow').textContent = t.classList.contains('collapsed') ? '∨' : '∧';
+    });
+    document.getElementById('mg-apply').addEventListener('click', () => {
+      tree.state = document.getElementById('mg-state').value;
+      tree.cat = document.getElementById('mg-cat').value;
+      renderTree();
+    });
+    document.getElementById('mg-allbtn').addEventListener('click', () => {
+      document.getElementById('mg-state').value = '';
+      document.getElementById('mg-cat').value = '';
+      tree.state = ''; tree.cat = '';
+      renderTree();
+    });
+    document.getElementById('mg-reset').addEventListener('click', () => {
+      document.getElementById('mg-state').value = '';
+      document.getElementById('mg-cat').value = '';
+      document.getElementById('mg-unreadonly').checked = false;
+      tree.state=''; tree.cat=''; tree.unreadOnly=false; tree.sortByUnread=true;
+      document.getElementById('mg-sort').textContent = '미답변순 ↓';
+      renderTree();
+    });
+    document.getElementById('mg-unreadonly').addEventListener('change', e => {
+      tree.unreadOnly = e.target.checked; renderTree();
+    });
+    document.getElementById('mg-sort').addEventListener('click', () => {
+      tree.sortByUnread = !tree.sortByUnread;
+      document.getElementById('mg-sort').textContent = tree.sortByUnread ? '미답변순 ↓' : '이름순 ↓';
+      renderTree();
+    });
+    document.getElementById('mg-searchbox').addEventListener('input', e => {
+      tree.q = e.target.value.trim(); renderTree();
+    });
+
+    // ========= 내 상담 (상담방 리스트) =========
+    // state: new=신규인입(레드닷) / unanswered=미답변(연한 붉은 방) / normal
+    let rooms = [
+      { cust:'이정민', phone:'010-2345-6789', ch:'채팅', status:'상담중',   state:'unanswered', msg:'배송 언제쯤 도착하나요?',       time:'10:42', owner:'김용일' },
+      { cust:'박서연', phone:'010-3456-7890', ch:'채팅', status:'상담중',   state:'new',        msg:'정수기 렌탈 문의드려요',         time:'10:40', owner:'김민강' },
+      { cust:'최준호', phone:'010-4567-8901', ch:'전화', status:'주문확정', state:'unanswered', msg:'설치일 변경 가능한지 확인 부탁', time:'10:31', owner:'윤승현' },
+      { cust:'김하늘', phone:'010-5678-9012', ch:'채팅', status:'설치대기', state:'new',        msg:'(신규 인입)',                   time:'10:25', owner:'곽예진' },
+      { cust:'정유진', phone:'010-6789-0123', ch:'채팅', status:'상담중',   state:'normal',     msg:'네 확인했습니다 감사합니다!',    time:'09:58', owner:'강소정' },
+      { cust:'오세훈', phone:'010-7890-1234', ch:'전화', status:'지원금대기', state:'normal',   msg:'지원금 서류 접수 완료',         time:'09:40', owner:'길수진' },
+      { cust:'한지수', phone:'010-8901-2345', ch:'채팅', status:'주문확정', state:'unanswered', msg:'결제는 어떻게 진행하나요?',      time:'09:12', owner:'김시인' },
+      { cust:'서동현', phone:'010-9012-3456', ch:'채팅', status:'상담중',   state:'normal',     msg:'알겠습니다',                    time:'어제', owner:'채새미' },
+      { cust:'문가영', phone:'010-1122-3344', ch:'채팅', status:'계약완료', state:'normal',     msg:'계약서 잘 받았습니다 감사해요', time:'어제', owner:'김민강' },
+    ];
+
+    let mineFilter = 'all';      // all / new / unanswered
+    let channelFilter = '';      // '' / 채팅 / 전화
+    let statusFilter = '';       // '' / 상담중 / 주문확정 / 설치대기 / 지원금대기 / 계약완료
+    const rank = { unanswered:0, new:1, normal:2 };  // 미답변 최상단 → 신규 → 일반
+
+    function renderChats() {
+      const wrap = document.getElementById('chat-list');
+      wrap.innerHTML = '';
+      // 상태 외 필터(채널/내담당/검색)를 먼저 적용한 base로 상태별 건수 계산
+      let base = rooms.slice();
+      if (channelFilter) base = base.filter(r => r.ch === channelFilter);
+      if (mineFilter !== 'all') base = base.filter(r => r.state === mineFilter);
+      const rq = (document.getElementById('room-search').value || '').trim();
+      if (rq) base = base.filter(r => r.cust.includes(rq) || r.phone.replace(/-/g,'').includes(rq.replace(/-/g,'')));
+      updateStatusCounts(base);
+
+      let list = statusFilter ? base.filter(r => r.status === statusFilter) : base.slice();
+      // 미답변 → 신규 → 일반 순 정렬
+      list.sort((a,b) => rank[a.state] - rank[b.state]);
+
+      if (list.length === 0) {
+        wrap.innerHTML = '<div class="empty-state"><div class="empty-icon"></div><p>해당 상담이 없어요.</p></div>';
+        updateChatCounts(); return;
+      }
+
+      list.forEach(r => {
+        const i = rooms.indexOf(r);
+        const el = document.createElement('div');
+        el.className = 'room' + (r.state === 'unanswered' ? ' unanswered' : '') + (i === selectedRoom ? ' sel' : '');
+        const nd = r.state === 'new' ? '<span class="nd"></span>' : '';
+        const flag = r.state === 'unanswered'
+          ? '<span class="un-flag">미답변</span>'
+          : (r.state === 'new' ? '<span class="new-flag">신규 인입</span>' : '');
+        el.innerHTML = `
+          <div class="av">👤${nd}</div>
+          <div class="body">
+            <div class="top">
+              <span class="nm">${r.cust}</span>
+              <span class="ch ${r.ch==='전화'?'tm':''}">${r.ch==='전화'?'전화(TM)':'채팅'}</span>
+              <span class="time">${r.time}</span>
+            </div>
+            <div class="msg">${r.msg}</div>
+            <div class="tags"><span class="st">${r.status}</span>${flag}</div>
+          </div>`;
+        el.addEventListener('click', () => openRoom(i));
+        wrap.appendChild(el);
+      });
+      updateChatCounts();
+    }
+
+    // ── 채팅방 열기 / 방 내부 뷰 ──
+    let selectedRoom = null;
+    function openRoom(idx) { selectedRoom = idx; renderChats(); renderRoomView(); }
+
+    function renderRoomView() {
+      const main = document.getElementById('chat-main');
+      if (selectedRoom === null || !rooms[selectedRoom]) {
+        main.innerHTML = `
+          <div class="chat-topbar"><div class="skeleton" style="width:200px;"></div><div class="skeleton" style="width:80px;margin-left:auto;"></div></div>
+          <div class="chat-body"><div class="chat-body-icon"></div><h3>상담을 선택해주세요.</h3><p>왼쪽 상담방을 선택하고<br>고객과 채팅 상담을 시작해요.</p></div>
+          <div class="chat-footer"></div>`;
+        return;
+      }
+      const r = rooms[selectedRoom];
+      const chCls = r.ch === '전화' ? 'tm' : '';
+      const chLabel = r.ch === '전화' ? '전화(TM)' : '채팅';
+      const banner = r.state === 'unanswered'
+        ? '<div class="un-banner">고객이 마지막으로 메시지를 남긴 <b>미답변</b> 상태예요. 응답을 보내면 자동 해제됩니다.</div>'
+        : (r.state === 'new'
+          ? '<div class="un-banner">아직 응답하지 않은 <b>신규 인입</b>입니다. 응답을 보내면 표시가 사라집니다.</div>' : '');
+      const replies = (r.replies || []).map(t =>
+        `<div class="bubble agent">${t}<span class="meta">상담원 · 방금</span></div>`).join('');
+      main.innerHTML = `
+        <div class="chat-topbar">
+          <div class="room-info"><span class="nm">${r.cust}</span><span class="phone-sm">${r.phone}</span><span class="ch ${chCls}">${chLabel}</span><span class="st">${r.status}</span></div>
+        </div>
+        ${banner}
+        <div class="chat-msgs">
+          <div class="bubble agent">안녕하세요, 무엇을 도와드릴까요?<span class="meta">상담원 · 09:30</span></div>
+          <div class="bubble cust">${r.msg}<span class="meta">${r.cust} · ${r.time}</span></div>
+          ${replies}
+        </div>
+        <div class="chat-input"><input id="msg-input" placeholder="메시지를 입력하세요" /><button class="send" onclick="sendMessage()">전송</button></div>`;
+      const inp = document.getElementById('msg-input');
+      if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+    }
+
+    // 응답 전송 → 미답변 자동 해제
+    function sendMessage() {
+      if (selectedRoom === null) return;
+      const inp = document.getElementById('msg-input');
+      const val = (inp.value || '').trim();
+      if (!val) return;
+      const r = rooms[selectedRoom];
+      r.replies = r.replies || [];
+      r.replies.push(val);
+      r.state = 'normal';   // 응답했으므로 미답변 해제
+      renderChats();
+      renderRoomView();
+    }
+
+    function updateStatusCounts(base) {
+      document.querySelectorAll('#status-tags .tag').forEach(t => {
+        const s = t.dataset.status;
+        const c = s ? base.filter(r => r.status === s).length : base.length;
+        t.innerHTML = `${s || '전체'} <span class="tag-cnt">${c}</span>`;
+      });
+    }
+
+    function updateChatCounts() {
+      document.getElementById('cnt-mine').textContent = rooms.length;
+      document.getElementById('cnt-new').textContent = rooms.filter(r => r.state === 'new').length;
+      document.getElementById('cnt-unans').textContent = rooms.filter(r => r.state === 'unanswered').length;
+    }
+
+    // 미답변 해제 (채팅방 내부에서 처리)
+    function clearUnanswered(idx, ev) {
+      if (ev) ev.stopPropagation();
+      rooms[idx].state = 'normal';
+      renderChats();
+      renderRoomView();
+    }
+
+    // 내 담당 사이드바 → 상담 리스트 필터
+    document.querySelectorAll('#view-inbox .nav-item[data-mine]').forEach(it => {
+      it.addEventListener('click', () => {
+        document.querySelectorAll('#view-inbox .nav-item[data-mine]').forEach(x => x.classList.remove('active'));
+        it.classList.add('active');
+        mineFilter = it.dataset.mine;
+        const titles = { all:'내 상담', new:'신규 인입 메시지', unanswered:'미답변' };
+        document.getElementById('chat-title').textContent = titles[mineFilter];
+        renderChats();
+      });
+    });
+
+    // 채널 서브탭 (TM / 채팅)
+    document.querySelectorAll('#channel-tabs .subtab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('#channel-tabs .subtab').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        channelFilter = t.dataset.ch;
+        renderChats();
+      });
+    });
+
+    // 채팅방 검색 (이름/전화번호)
+    document.getElementById('room-search').addEventListener('input', renderChats);
+
+    // 상태 태그 필터
+    document.querySelectorAll('#status-tags .tag').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('#status-tags .tag').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        statusFilter = t.dataset.status;
+        renderChats();
+      });
+    });
+
+    render();
+    renderTree();
+    renderChats();
+    renderRoomView();
+  </script>
+
+</body>
+</html>
