@@ -217,7 +217,15 @@
     .btn-reset:hover { background: #f3f3f3; }
 
     /* ── 테이블 ── */
-    .members-table-wrap { flex: 1; overflow-y: auto; padding: 8px 24px 24px; }
+    .members-table-wrap { flex: 1; overflow-y: auto; padding: 8px 24px 12px; }
+    .members-pager { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; border-top:1px solid #eee; font-size:13px; color:#666; }
+    .members-pager .pg-left { display:flex; align-items:center; gap:10px; }
+    .members-pager #page-size { padding:5px 8px; border:1px solid #ddd; border-radius:7px; font-size:12px; }
+    .members-pager .pg-right { display:flex; align-items:center; gap:8px; }
+    .members-pager .pg-btn { padding:6px 12px; border:1px solid #ddd; border-radius:7px; background:#fff; cursor:pointer; font-size:12px; }
+    .members-pager .pg-btn:hover:not(:disabled) { background:#f3f3f3; }
+    .members-pager .pg-btn:disabled { color:#ccc; cursor:not-allowed; }
+    .members-pager .pg-cur { font-size:12px; color:#888; min-width:54px; text-align:center; }
     table.members { width: 100%; border-collapse: collapse; font-size: 13px; }
     table.members th { text-align: left; padding: 10px 12px; color: #999; font-weight: 600; font-size: 12px; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; }
     table.members td { padding: 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
@@ -294,7 +302,12 @@
     #toast-undo { background:none; border:none; color:#7df3c0; font-size:13px; font-weight:700; cursor:pointer; padding:2px 8px; }
     #toast-undo.hide { display:none; }
     #even-preview { display:none; background:#f7f7fb; border:1px solid #eee; border-radius:8px; padding:10px; }
-    #even-preview .ep-row { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:#444; }
+    #even-preview .ep-head { font-size:12px; color:#555; margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid #e8e8ee; }
+    #even-preview .ep-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:4px 0; color:#444; gap:8px; }
+    #even-preview .ep-nm { font-weight:600; flex-shrink:0; }
+    #even-preview .ep-val { color:#999; text-align:right; flex-shrink:0; font-size:11px; }
+    #even-preview .ep-u { color:#d24; font-size:11px; }
+    #even-preview .ep-val b { color:#222; }
     #even-preview .ep-row .g { color:#1a9c5b; font-weight:700; }
     #even-preview .ep-empty { font-size:12px; color:#aaa; }
 
@@ -501,6 +514,7 @@
           <tbody id="members-body"></tbody>
         </table>
       </div>
+      <div class="members-pager" id="members-pager"></div>
     </main>
 
     <!-- 구성원 상세 패널 -->
@@ -584,19 +598,30 @@
     let pending = null;
     const stateLabel = { active:'재직', resigned:'퇴사' };
 
+    let pageSize = 10;
+    let currentPage = 1;
+
     function render() {
       const body = document.getElementById('members-body');
       const q = document.getElementById('search').value.trim();
       body.innerHTML = '';
-      let shown = 0;
-      members.forEach((m, idx) => {
-        if (filters.status && m.state !== filters.status) return;
-        if (filters.role && m.role !== filters.role) return;
-        if (filters.channel && m.channel !== filters.channel) return;
-        if (filters.category && m.category !== filters.category) return;
-        if (q && !m.name.includes(q)) return;
-        shown++;
 
+      const filtered = members.map((m, idx) => ({ m, idx })).filter(({ m }) => {
+        if (filters.status && m.state !== filters.status) return false;
+        if (filters.role && m.role !== filters.role) return false;
+        if (filters.channel && m.channel !== filters.channel) return false;
+        if (filters.category && m.category !== filters.category) return false;
+        if (q && !m.name.includes(q)) return false;
+        return true;
+      });
+
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const startI = (currentPage - 1) * pageSize;
+      const pageItems = filtered.slice(startI, startI + pageSize);
+
+      pageItems.forEach(({ m, idx }) => {
         const tr = document.createElement('tr');
         if (m.state === 'resigned') tr.className = 'row-resigned';
         const roleCls = m.role === '관리자' ? '' : 'consultant';
@@ -620,10 +645,35 @@
         tr.addEventListener('click', () => openMemberDetail(idx));
         body.appendChild(tr);
       });
-      if (shown === 0) {
+      if (pageItems.length === 0) {
         body.innerHTML = '<tr class="empty-row"><td colspan="9">조건에 맞는 구성원이 없어요.</td></tr>';
       }
+      renderPager(total, totalPages, startI, pageItems.length);
       updateCounts();
+    }
+
+    function gotoPage(n) { currentPage = n; render(); }
+
+    function renderPager(total, totalPages, startI, count) {
+      const pager = document.getElementById('members-pager');
+      const from = total ? startI + 1 : 0;
+      const to = startI + count;
+      pager.innerHTML = `
+        <div class="pg-left">총 <b>${total}</b>명 중 ${from}–${to}
+          <select id="page-size">
+            <option value="10">10명씩</option>
+            <option value="20">20명씩</option>
+            <option value="100">100명씩</option>
+          </select>
+        </div>
+        <div class="pg-right">
+          <button class="pg-btn" ${currentPage<=1?'disabled':''} onclick="gotoPage(${currentPage-1})">‹ 이전</button>
+          <span class="pg-cur">${currentPage} / ${totalPages}</span>
+          <button class="pg-btn" ${currentPage>=totalPages?'disabled':''} onclick="gotoPage(${currentPage+1})">다음 ›</button>
+        </div>`;
+      const sel = document.getElementById('page-size');
+      sel.value = String(pageSize);
+      sel.onchange = e => { pageSize = parseInt(e.target.value, 10); currentPage = 1; render(); };
     }
 
     function updateCounts() {
@@ -643,6 +693,7 @@
           group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
           filters[group.dataset.group] = chip.dataset.v;
+          currentPage = 1;
           syncQuick();
           render();
         });
@@ -654,6 +705,7 @@
       it.addEventListener('click', () => {
         const v = it.dataset.quick === 'all' ? '' : it.dataset.quick;
         filters.status = v;
+        currentPage = 1;
         const grp = document.querySelector('.chips[data-group="status"]');
         grp.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.v === v));
         syncQuick();
@@ -667,8 +719,9 @@
       });
     }
 
-    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('search').addEventListener('input', () => { currentPage = 1; render(); });
     document.getElementById('reset').addEventListener('click', () => {
+      currentPage = 1;
       filters.status = filters.role = filters.channel = filters.category = '';
       document.querySelectorAll('.chips').forEach(g => {
         g.querySelectorAll('.chip').forEach((c,i) => c.classList.toggle('active', i === 0));
@@ -711,12 +764,10 @@
       document.getElementById('modal').classList.add('show');
     }
 
-    // 균등 분배 대상: 같은 카테고리 재직 컨설턴트 우선, 없으면 전체 재직 컨설턴트
+    // 균등/가중 분배 대상: 퇴사자와 "같은 카테고리"의 재직 컨설턴트만 (카테고리 밖으로는 분배 안 함)
     function evenCandidates(idx) {
       const m = members[idx];
-      let c = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트' && x.category === m.category);
-      if (!c.length) c = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트');
-      return c;
+      return members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트' && x.category === m.category && m.category);
     }
     function splitN(total, n) {
       const base = Math.floor(total / n), rem = total % n;
@@ -761,8 +812,12 @@
         sel.style.display = 'none';
         prev.style.display = '';
         const m = members[pending];
+        const cat = m.category || '미지정';
         const cands = evenCandidates(pending);
-        if (!cands.length) { prev.innerHTML = '<div class="ep-empty">분배할 재직 컨설턴트가 없어요.</div>'; return; }
+        if (!cands.length) {
+          prev.innerHTML = `<div class="ep-empty"><b>${cat}</b> 카테고리에 분배할 재직 컨설턴트가 없어요.<br>'한 명에게 이관' 또는 '이관 안 함'을 사용하세요.</div>`;
+          return;
+        }
         let shareA, shareU;
         if (mode === 'weighted') {
           shareA = allocWeighted(m.assigned, cands.map(c => c.assigned));
@@ -771,9 +826,13 @@
           shareA = splitN(m.assigned, cands.length);
           shareU = splitN(m.unread, cands.length);
         }
-        prev.innerHTML = cands.map((c,i) =>
-          `<div class="ep-row"><span>${c.name} <span style="color:#aaa">(담당 ${c.assigned})</span></span>
-           <span class="g">+${shareA[i]}건${shareU[i]?` · 미답변 +${shareU[i]}`:''}</span></div>`).join('');
+        prev.innerHTML =
+          `<div class="ep-head"><b>${cat}</b> 카테고리 ${cands.length}명에게 채팅방 ${m.assigned}건${m.unread?` · 미답변 ${m.unread}건`:''} 배정</div>` +
+          cands.map((c,i) =>
+          `<div class="ep-row">
+             <span class="ep-nm">${c.name}님에게 <b class="g">${shareA[i]}건</b> 배정${shareU[i]?` <span class="ep-u">(미답변 ${shareU[i]})</span>`:''}</span>
+             <span class="ep-val">담당 ${c.assigned}→${c.assigned+shareA[i]}</span>
+           </div>`).join('');
       } else {
         sel.style.display = '';
         prev.style.display = 'none';
