@@ -144,6 +144,8 @@
     .room-info .st { font-size:11px; padding:2px 7px; border-radius:4px; background:#f0f0f0; color:#777; }
     .btn-clear-room { margin-left:auto; padding:7px 13px; border:1px solid #f3b0b0; color:#d24; background:#fff; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; }
     .btn-clear-room:hover { background:#fdecec; }
+    .btn-sim { margin-left:auto; padding:6px 11px; border:1px dashed #c9c9d6; color:#777; background:#fafafd; border-radius:7px; font-size:12px; cursor:pointer; }
+    .btn-sim:hover { background:#f0f0f6; }
     .un-banner { background:#fdeeee; color:#d24; font-size:12px; padding:7px 14px; text-align:center; }
     .chat-msgs { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:10px; background:#fbfbfd; }
     .bubble { max-width:70%; padding:9px 13px; border-radius:12px; font-size:13px; line-height:1.45; }
@@ -359,17 +361,19 @@
       <div class="toggle-row"><span>자동 배정</span><span><span class="toggle-badge">OFF</span> ›</span></div>
       <div class="sidebar-scroll">
         <div class="section-title">내 담당</div>
-        <div class="nav-item active" data-mine="all"><span class="label"><span class="icon-box"></span> 내 상담</span><span class="count" id="cnt-mine">0</span></div>
-        <div class="nav-item" data-mine="new"><span class="label"><span class="reddot"></span> 신규 인입 메시지</span><span class="count-badge" id="cnt-new">0</span></div>
-        <div class="nav-item" data-mine="unanswered"><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge" id="cnt-unans">0</span></div>
+        <div class="nav-item active" data-mine="all" data-ch=""><span class="label"><span class="icon-box"></span> 내 상담</span><span class="count" id="cnt-mine">0</span></div>
+        <div class="nav-item" data-mine="new" data-ch=""><span class="label"><span class="reddot"></span> 신규 인입 메시지</span><span class="count-badge" id="cnt-new">0</span></div>
+        <div class="nav-item" data-mine="unanswered" data-ch=""><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge" id="cnt-unans">0</span></div>
         <div class="divider"></div>
         <div class="section-title">팀 전체</div>
-        <div class="nav-item"><span class="label"><span class="icon-box"></span> 전체</span><span class="count">999+</span></div>
-        <div class="nav-item"><span class="label"><span class="reddot"></span> 신규 인입 메시지</span><span class="count-badge">12</span></div>
-        <div class="nav-item"><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge">31</span></div>
-        <div class="nav-item"><span class="label"><span class="icon-box"></span> 미배정</span><span class="count">4</span></div>
-        <div class="nav-item sub-item"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count">0</span></div>
-        <div class="nav-item sub-item"><span class="label"><span class="icon-box"></span> 전화</span><span class="count">4</span></div>
+        <div class="nav-item" data-team="1" data-mine="all" data-ch=""><span class="label"><span class="icon-box"></span> 전체</span><span class="count">999+</span></div>
+        <div class="nav-item" data-team="1" data-mine="new" data-ch=""><span class="label"><span class="reddot"></span> 신규 인입 메시지</span><span class="count-badge">12</span></div>
+        <div class="nav-item sub-item" data-team="1" data-mine="new" data-ch="채팅"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count">8</span></div>
+        <div class="nav-item sub-item" data-team="1" data-mine="new" data-ch="전화"><span class="label"><span class="icon-box"></span> 전화</span><span class="count">4</span></div>
+        <div class="nav-item" data-team="1" data-mine="unanswered" data-ch=""><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge">31</span></div>
+        <div class="nav-item sub-item" data-team="1" data-mine="unanswered" data-ch="채팅"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count">22</span></div>
+        <div class="nav-item sub-item" data-team="1" data-mine="unanswered" data-ch="전화"><span class="label"><span class="icon-box"></span> 전화</span><span class="count">9</span></div>
+        <div class="nav-item" data-team="1" data-mine="all" data-ch=""><span class="label"><span class="icon-box"></span> 미배정</span><span class="count">4</span></div>
         <div class="divider"></div>
         <div class="group-header"><span>그룹 25</span><button>∧</button></div>
         <div class="group-item"><span class="group-avatar"></span><span class="group-name">AM렌탈 공식몰</span></div>
@@ -1204,17 +1208,20 @@
         ? '<div class="un-banner">고객이 마지막으로 메시지를 남긴 <b>미답변</b> 상태예요. 응답을 보내면 자동 해제됩니다.</div>'
         : (r.state === 'new'
           ? '<div class="un-banner">아직 응답하지 않은 <b>신규 인입</b>입니다. 응답을 보내면 표시가 사라집니다.</div>' : '');
-      const replies = (r.replies || []).map(t =>
-        `<div class="bubble agent">${t}<span class="meta">상담원 · 방금</span></div>`).join('');
+      const thread = (r.thread || []).map(t =>
+        t.who === 'agent'
+          ? `<div class="bubble agent">${t.text}<span class="meta">상담원 · 방금</span></div>`
+          : `<div class="bubble cust">${t.text}<span class="meta">${r.cust} · 방금</span></div>`).join('');
       main.innerHTML = `
         <div class="chat-topbar">
           <div class="room-info"><span class="nm">${r.cust}</span><span class="phone-sm">${r.phone}</span><span class="ch ${chCls}">${chLabel}</span><span class="st">${r.status}</span></div>
+          <button class="btn-sim" onclick="simulateCustomerReply(${selectedRoom}, event)">🔔 고객 답변(데모)</button>
         </div>
         ${banner}
         <div class="chat-msgs">
           <div class="bubble agent">안녕하세요, 무엇을 도와드릴까요?<span class="meta">상담원 · 09:30</span></div>
           <div class="bubble cust">${r.msg}<span class="meta">${r.cust} · ${r.time}</span></div>
-          ${replies}
+          ${thread}
         </div>
         <div class="chat-input"><input id="msg-input" placeholder="메시지를 입력하세요" /><button class="send" onclick="sendMessage()">전송</button></div>`;
       const inp = document.getElementById('msg-input');
@@ -1228,9 +1235,20 @@
       const val = (inp.value || '').trim();
       if (!val) return;
       const r = rooms[selectedRoom];
-      r.replies = r.replies || [];
-      r.replies.push(val);
-      r.state = 'normal';   // 응답했으므로 미답변 해제
+      r.thread = r.thread || [];
+      r.thread.push({ who: 'agent', text: val });
+      r.state = 'normal';   // 응답했으므로 미답변/신규 해제 → 내 상담으로
+      renderChats();
+      renderRoomView();
+    }
+
+    // 고객 답변 시뮬레이션 → 미답변으로 전환 (데모용)
+    function simulateCustomerReply(idx, ev) {
+      if (ev) ev.stopPropagation();
+      const r = rooms[idx];
+      r.thread = r.thread || [];
+      r.thread.push({ who: 'cust', text: '추가로 문의가 있어요!' });
+      r.state = 'unanswered';
       renderChats();
       renderRoomView();
     }
@@ -1257,14 +1275,20 @@
       renderRoomView();
     }
 
-    // 내 담당 사이드바 → 상담 리스트 필터
+    // 내 담당 / 팀 전체 사이드바 → 상담 리스트 필터
     document.querySelectorAll('#view-inbox .nav-item[data-mine]').forEach(it => {
       it.addEventListener('click', () => {
         document.querySelectorAll('#view-inbox .nav-item[data-mine]').forEach(x => x.classList.remove('active'));
         it.classList.add('active');
         mineFilter = it.dataset.mine;
+        channelFilter = it.dataset.ch || '';
         const titles = { all:'내 상담', new:'신규 인입 메시지', unanswered:'미답변' };
-        document.getElementById('chat-title').textContent = titles[mineFilter];
+        const scope = it.dataset.team ? '[팀 전체] ' : '';
+        const chLabel = channelFilter ? ' · ' + (channelFilter === '전화' ? '전화(TM)' : '채팅') : '';
+        document.getElementById('chat-title').textContent = scope + titles[mineFilter] + chLabel;
+        // 채널 서브탭 동기화
+        document.querySelectorAll('#channel-tabs .subtab').forEach(t =>
+          t.classList.toggle('active', t.dataset.ch === channelFilter));
         renderChats();
       });
     });
