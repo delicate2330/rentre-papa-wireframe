@@ -366,14 +366,13 @@
         <div class="nav-item" data-mine="unanswered" data-ch=""><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge" id="cnt-unans">0</span></div>
         <div class="divider"></div>
         <div class="section-title">팀 전체</div>
-        <div class="nav-item" data-team="1" data-mine="all" data-ch=""><span class="label"><span class="icon-box"></span> 전체</span><span class="count">999+</span></div>
-        <div class="nav-item" data-team="1" data-mine="new" data-ch=""><span class="label"><span class="reddot"></span> 신규 인입 메시지</span><span class="count-badge">12</span></div>
-        <div class="nav-item sub-item" data-team="1" data-mine="new" data-ch="채팅"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count">8</span></div>
-        <div class="nav-item sub-item" data-team="1" data-mine="new" data-ch="전화"><span class="label"><span class="icon-box"></span> 전화</span><span class="count">4</span></div>
-        <div class="nav-item" data-team="1" data-mine="unanswered" data-ch=""><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge">31</span></div>
-        <div class="nav-item sub-item" data-team="1" data-mine="unanswered" data-ch="채팅"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count">22</span></div>
-        <div class="nav-item sub-item" data-team="1" data-mine="unanswered" data-ch="전화"><span class="label"><span class="icon-box"></span> 전화</span><span class="count">9</span></div>
-        <div class="nav-item" data-team="1" data-mine="all" data-ch=""><span class="label"><span class="icon-box"></span> 미배정</span><span class="count">4</span></div>
+        <div class="nav-item" data-team="1" data-mine="all" data-ch=""><span class="label"><span class="icon-box"></span> 전체</span><span class="count" id="tcnt-all">0</span></div>
+        <div class="nav-item" data-team="1" data-mine="new" data-ch=""><span class="label"><span class="reddot"></span> 신규 인입 메시지</span><span class="count-badge" id="tcnt-new">0</span></div>
+        <div class="nav-item sub-item" data-team="1" data-mine="new" data-ch="채팅"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count" id="tcnt-new-chat">0</span></div>
+        <div class="nav-item sub-item" data-team="1" data-mine="new" data-ch="전화"><span class="label"><span class="icon-box"></span> 전화</span><span class="count" id="tcnt-new-tel">0</span></div>
+        <div class="nav-item" data-team="1" data-mine="unanswered" data-ch=""><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge" id="tcnt-unans">0</span></div>
+        <div class="nav-item sub-item" data-team="1" data-mine="unanswered" data-ch="채팅"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count" id="tcnt-unans-chat">0</span></div>
+        <div class="nav-item sub-item" data-team="1" data-mine="unanswered" data-ch="전화"><span class="label"><span class="icon-box"></span> 전화</span><span class="count" id="tcnt-unans-tel">0</span></div>
         <div class="divider"></div>
         <div class="group-header"><span>그룹 25</span><button>∧</button></div>
         <div class="group-item"><span class="group-avatar"></span><span class="group-name">AM렌탈 공식몰</span></div>
@@ -1262,9 +1261,19 @@
     }
 
     function updateChatCounts() {
+      const cnt = (st, ch) => rooms.filter(r => r.state === st && (!ch || r.ch === ch)).length;
+      // 내 담당
       document.getElementById('cnt-mine').textContent = rooms.length;
-      document.getElementById('cnt-new').textContent = rooms.filter(r => r.state === 'new').length;
-      document.getElementById('cnt-unans').textContent = rooms.filter(r => r.state === 'unanswered').length;
+      document.getElementById('cnt-new').textContent = cnt('new');
+      document.getElementById('cnt-unans').textContent = cnt('unanswered');
+      // 팀 전체
+      document.getElementById('tcnt-all').textContent = rooms.length;
+      document.getElementById('tcnt-new').textContent = cnt('new');
+      document.getElementById('tcnt-new-chat').textContent = cnt('new', '채팅');
+      document.getElementById('tcnt-new-tel').textContent = cnt('new', '전화');
+      document.getElementById('tcnt-unans').textContent = cnt('unanswered');
+      document.getElementById('tcnt-unans-chat').textContent = cnt('unanswered', '채팅');
+      document.getElementById('tcnt-unans-tel').textContent = cnt('unanswered', '전화');
     }
 
     // 미답변 해제 (채팅방 내부에서 처리)
