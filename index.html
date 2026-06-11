@@ -213,6 +213,14 @@
     .filter-panel { padding: 14px 24px 6px; border-bottom: 1px solid #f0f0f0; }
     .filter-line { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
     .filter-label { width: 64px; font-size: 12px; color: #999; flex-shrink: 0; }
+    .flt-grp { margin-bottom: 12px; }
+    .flt-h { display:block; font-size:11px; font-weight:700; color:#888; margin-bottom:6px; letter-spacing:.02em; }
+    .flt-sublbl { width: 56px; font-size:12px; color:#aaa; flex-shrink:0; }
+    /* 대분류 세그먼트 토글 */
+    .chips.seg { display:inline-flex; border:1px solid #ddd; border-radius:9px; overflow:hidden; gap:0; }
+    .chips.seg .chip { border:none; border-right:1px solid #eee; border-radius:0; padding:8px 20px; font-size:13px; }
+    .chips.seg .chip:last-child { border-right:none; }
+    .chips.seg .chip.active { background:#3a3de8; color:#fff; }
     .chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .chip { padding: 4px 12px; border: 1px solid #ddd; border-radius: 20px; font-size: 12px; color: #555; cursor: pointer; background: #fff; }
     .chip.active { background: #3a3de8; color: #fff; border-color: #3a3de8; }
@@ -296,6 +304,25 @@
 
     /* 모달 select */
     .modal-select { width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:13px; margin-bottom:6px; }
+    .lbl-sub { font-size:11px; color:#aaa; font-weight:400; }
+    /* 퇴사 사유 토글 */
+    .reason-toggle { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+    .reason-chip { padding:7px 14px; border:1px solid #ddd; border-radius:20px; background:#fff; cursor:pointer; font-size:13px; color:#555; }
+    .reason-chip:hover { background:#f5f5f8; }
+    .reason-chip.active { background:#d24; color:#fff; border-color:#d24; }
+    .resign-roominfo { background:#fff7f0; border:1px solid #f0d9c0; color:#a85a1a; font-size:12px; padding:9px 11px; border-radius:8px; line-height:1.5; }
+    /* 상세 패널 - 담당 채팅방 체크리스트 */
+    .md-room { display:flex; align-items:center; gap:8px; padding:8px 6px; border:1px solid #f0f0f0; border-radius:8px; margin-bottom:6px; cursor:pointer; }
+    .md-room:hover { background:#fafaff; }
+    .md-room input { margin:0; flex-shrink:0; }
+    .md-room .rn { font-size:13px; font-weight:600; }
+    .md-room .rc { font-size:10px; padding:1px 6px; border-radius:4px; background:#eef0ff; color:#3a3de8; }
+    .md-room .st-sm { font-size:11px; color:#888; }
+    .md-room .un { margin-left:auto; font-size:11px; color:#d24; font-weight:700; }
+    .reassign-bar { margin-top:10px; padding:10px; background:#f7f7fb; border:1px solid #eee; border-radius:8px; }
+    .reassign-bar .ck-all { display:flex; align-items:center; gap:6px; font-size:12px; color:#555; cursor:pointer; }
+    .btn-assign { width:100%; padding:9px; background:#3a3de8; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+    .btn-assign:hover { background:#3133c0; }
     #reassign-block { margin-bottom:16px; }
     .reassign-hint { font-size:11px; color:#aaa; margin:6px 0 0; line-height:1.4; }
     .reassign-mode { display:flex; flex-wrap:wrap; gap:8px 12px; margin-bottom:8px; }
@@ -463,44 +490,44 @@
 
       <!-- 4단계 필터 -->
       <div class="filter-panel">
-        <div class="filter-line">
-          <span class="filter-label">재직상태</span>
-          <div class="chips" data-group="status">
+        <div class="flt-grp">
+          <span class="flt-h">대분류 · 재직상태</span>
+          <div class="chips seg" data-group="status">
             <button class="chip active" data-v="">전체</button>
             <button class="chip" data-v="active">재직자</button>
             <button class="chip" data-v="resigned">퇴사자</button>
           </div>
         </div>
-        <div class="filter-line">
-          <span class="filter-label">역할</span>
-          <div class="chips" data-group="role">
-            <button class="chip active" data-v="">전체</button>
-            <button class="chip" data-v="관리자">관리자</button>
-            <button class="chip" data-v="컨설턴트">컨설턴트</button>
+        <div class="flt-grp">
+          <span class="flt-h">소분류</span>
+          <div class="filter-line"><span class="flt-sublbl">역할</span>
+            <div class="chips" data-group="role">
+              <button class="chip active" data-v="">전체</button>
+              <button class="chip" data-v="관리자">관리자</button>
+              <button class="chip" data-v="컨설턴트">컨설턴트</button>
+            </div>
           </div>
-        </div>
-        <div class="filter-line">
-          <span class="filter-label">상담수단</span>
-          <div class="chips" data-group="channel">
-            <button class="chip active" data-v="">전체</button>
-            <button class="chip" data-v="전화">전화(TM)</button>
-            <button class="chip" data-v="채팅">채팅</button>
+          <div class="filter-line"><span class="flt-sublbl">상담수단</span>
+            <div class="chips" data-group="channel">
+              <button class="chip active" data-v="">전체</button>
+              <button class="chip" data-v="전화">전화(TM)</button>
+              <button class="chip" data-v="채팅">채팅</button>
+            </div>
           </div>
-        </div>
-        <div class="filter-line">
-          <span class="filter-label">제품</span>
-          <div class="chips" data-group="category">
-            <button class="chip active" data-v="">전체</button>
-            <button class="chip" data-v="가전">가전</button>
-            <button class="chip" data-v="정수기">정수기</button>
-            <button class="chip" data-v="TPS">TPS</button>
-            <button class="chip" data-v="상조">상조</button>
-            <button class="chip" data-v="이사">이사</button>
-            <button class="chip" data-v="기타">기타</button>
+          <div class="filter-line"><span class="flt-sublbl">제품</span>
+            <div class="chips" data-group="category">
+              <button class="chip active" data-v="">전체</button>
+              <button class="chip" data-v="가전">가전</button>
+              <button class="chip" data-v="정수기">정수기</button>
+              <button class="chip" data-v="TPS">TPS</button>
+              <button class="chip" data-v="상조">상조</button>
+              <button class="chip" data-v="이사">이사</button>
+              <button class="chip" data-v="기타">기타</button>
+            </div>
           </div>
         </div>
         <div class="filter-foot">
-          <input class="search-box" id="search" placeholder="이름 검색" />
+          <input class="search-box" id="search" placeholder="이름 검색 (2글자 이상)" />
           <button class="btn-reset" id="reset">초기화</button>
         </div>
       </div>
@@ -538,19 +565,16 @@
       <h3 id="modal-title">퇴사 처리</h3>
       <p id="modal-desc"></p>
       <div id="resign-fields">
+        <label>퇴사 사유 <span style="color:#d24">*</span> <span class="lbl-sub">(법적 보관용)</span></label>
+        <div class="reason-toggle" id="reason-toggle">
+          <button type="button" class="reason-chip" data-r="자발적 퇴사">자발적 퇴사</button>
+          <button type="button" class="reason-chip" data-r="권고사직">권고사직</button>
+          <button type="button" class="reason-chip" data-r="계약만료">계약만료</button>
+          <button type="button" class="reason-chip" data-r="기타">기타</button>
+        </div>
         <label>퇴사일</label>
         <input type="date" id="modal-date" />
-        <div id="reassign-block">
-          <label>담당 채팅방 이관 (<span id="reassign-count">0</span>건)</label>
-          <div class="reassign-mode">
-            <label><input type="radio" name="rmode" value="single" checked> 한 명에게 이관</label>
-            <label><input type="radio" name="rmode" value="even"> 균등 분배</label>
-            <label><input type="radio" name="rmode" value="weighted"> 가중 분배(부하↓ 우선)</label>
-          </div>
-          <select class="modal-select" id="reassign-target"></select>
-          <div id="even-preview"></div>
-          <p class="reassign-hint">채팅방·미답변이 함께 이관됩니다. '이관 안 함' 선택 시 미배정으로 남습니다.</p>
-        </div>
+        <div id="resign-roominfo" class="resign-roominfo"></div>
       </div>
       <div class="modal-btns">
         <button class="btn-cancel" onclick="closeModal()">취소</button>
@@ -603,6 +627,39 @@
     }
     const CAT_ORDER = ['가전','정수기','TPS','TM','상조','이사','기타','관리자'];
 
+    // ── 구성원별 담당 채팅방 생성 (체크박스 분배 데모용) ──
+    const CUSTS = ['이서준','김지우','박도윤','최하은','정시우','강민서','조유나','윤지호','임수아','한예준','오서연','신준우','권다은','황지안','안채원','배준혁','문서아','양하준','구민준','노은우','서지율','홍시현','류하린','전우진','마유빈'];
+    const RSTS = ['상담중','주문확정','설치대기','지원금대기','계약완료'];
+    let _cseq = 0, _rid = 1;
+    function genRooms() {
+      _cseq = 0; _rid = 1;
+      members.forEach((m, mi) => {
+        m.rooms = [];
+        if (m.state === 'active' && m.role === '컨설턴트') {
+          const n = 3 + ((mi * 3 + 1) % 4);           // 3~6건
+          const unAns = m.unread > 10 ? 2 : (m.unread > 0 ? 1 : 0);
+          for (let i = 0; i < n; i++) {
+            m.rooms.push({
+              id: _rid++,
+              cust: CUSTS[_cseq % CUSTS.length],
+              category: m.category || '전화',
+              status: RSTS[(_cseq + i) % RSTS.length],
+              state: i < unAns ? 'unanswered' : 'normal'
+            });
+            _cseq++;
+          }
+        }
+      });
+      recount();
+    }
+    // 담당/미답변 수를 방 목록에서 재계산
+    function recount() {
+      members.forEach(m => {
+        m.assigned = (m.rooms || []).length;
+        m.unread = (m.rooms || []).filter(r => r.state === 'unanswered').length;
+      });
+    }
+
     const filters = { status:'', role:'', channel:'', category:'' };
     let pending = null;
     const stateLabel = { active:'재직', resigned:'퇴사' };
@@ -615,14 +672,17 @@
       const q = document.getElementById('search').value.trim();
       body.innerHTML = '';
 
+      const qActive = q.length >= 2;   // 이름 검색은 2글자 이상부터
       const filtered = members.map((m, idx) => ({ m, idx })).filter(({ m }) => {
         if (filters.status && m.state !== filters.status) return false;
         if (filters.role && m.role !== filters.role) return false;
         if (filters.channel && m.channel !== filters.channel) return false;
         if (filters.category && m.category !== filters.category) return false;
-        if (q && !m.name.includes(q)) return false;
+        if (qActive && !m.name.includes(q)) return false;
         return true;
       });
+      // 재직자 우선, 퇴사자 후순위 (그 안에서는 원래 순서)
+      filtered.sort((a, b) => (a.m.state === 'resigned') - (b.m.state === 'resigned'));
 
       const total = filtered.length;
       const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -744,56 +804,36 @@
     let pendingMode = 'resign';
     const confirmBtn = document.getElementById('modal-confirm');
 
+    let selectedReason = '';
     function openModal(idx, ev) {  // 퇴사
       if (ev) ev.stopPropagation();
       pending = idx; pendingMode = 'resign';
+      selectedReason = '';
       const m = members[idx];
       document.getElementById('modal-title').textContent = '퇴사 처리';
       document.getElementById('modal-desc').textContent =
         `${m.name} 님(${m.role}${m.category ? ' · ' + m.category : ''})을 퇴사 처리합니다.`;
       document.getElementById('resign-fields').style.display = '';
       document.getElementById('modal-date').value = new Date().toISOString().slice(0,10);
+      document.querySelectorAll('#reason-toggle .reason-chip').forEach(c => c.classList.remove('active'));
       confirmBtn.textContent = '퇴사 처리';
-      confirmBtn.classList.remove('btn-reinstate-confirm');
-
-      const block = document.getElementById('reassign-block');
-      const sel = document.getElementById('reassign-target');
-      document.getElementById('reassign-count').textContent = m.assigned;
+      // 남은 담당 채팅방 안내
+      const ri = document.getElementById('resign-roominfo');
       if (m.assigned > 0) {
-        block.style.display = '';
-        const cands = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트');
-        cands.sort((a,b) => (b.category === m.category) - (a.category === m.category) || a.assigned - b.assigned);
-        sel.innerHTML = '<option value="-1">이관 안 함 (미배정)</option>' +
-          cands.map(c => `<option value="${members.indexOf(c)}">${c.name} · ${c.category || c.channel || '-'} (담당 ${c.assigned})</option>`).join('');
-        document.querySelector('input[name=rmode][value=single]').checked = true;
-        updateReassignMode();
-      } else {
-        block.style.display = 'none';
-      }
+        ri.innerHTML = `담당 채팅방 <b>${m.assigned}건</b>이 남아 있어요. 상세 패널에서 다른 담당자에게 이관 후 처리하는 것을 권장합니다. (미이관 시 미배정 처리)`;
+        ri.style.display = '';
+      } else { ri.style.display = 'none'; }
       document.getElementById('modal').classList.add('show');
     }
 
-    // 균등/가중 분배 대상: 퇴사자와 "같은 카테고리"의 재직 컨설턴트만 (카테고리 밖으로는 분배 안 함)
-    function evenCandidates(idx) {
-      const m = members[idx];
-      return members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트' && x.category === m.category && m.category);
-    }
-    function splitN(total, n) {
-      const base = Math.floor(total / n), rem = total % n;
-      return Array.from({length:n}, (_, i) => base + (i < rem ? 1 : 0));
-    }
-    // 가중(water-filling): 현재 부하 적은 사람부터 1건씩 채워 부하를 평준화
-    function allocWeighted(total, loads) {
-      const cur = loads.slice();
-      const add = loads.map(() => 0);
-      for (let k = 0; k < total; k++) {
-        let mi = 0;
-        for (let i = 1; i < cur.length; i++) if (cur[i] < cur[mi]) mi = i;
-        cur[mi]++; add[mi]++;
-      }
-      return add;
-    }
-    function getRMode() { return document.querySelector('input[name=rmode]:checked').value; }
+    // 퇴사 사유 토글
+    document.querySelectorAll('#reason-toggle .reason-chip').forEach(c => {
+      c.addEventListener('click', () => {
+        document.querySelectorAll('#reason-toggle .reason-chip').forEach(x => x.classList.remove('active'));
+        c.classList.add('active');
+        selectedReason = c.dataset.r;
+      });
+    });
 
     // 토스트 (+ 실행취소)
     let toastTimer = null;
@@ -813,134 +853,89 @@
       toastTimer = setTimeout(() => t.classList.remove('show'), undoFn ? 5000 : 2600);
     }
 
-    function updateReassignMode() {
-      const mode = getRMode();
-      const sel = document.getElementById('reassign-target');
-      const prev = document.getElementById('even-preview');
-      if (mode === 'even' || mode === 'weighted') {
-        sel.style.display = 'none';
-        prev.style.display = '';
-        const m = members[pending];
-        const cat = m.category || '미지정';
-        const cands = evenCandidates(pending);
-        if (!cands.length) {
-          prev.innerHTML = `<div class="ep-empty"><b>${cat}</b> 카테고리에 분배할 재직 컨설턴트가 없어요.<br>'한 명에게 이관' 또는 '이관 안 함'을 사용하세요.</div>`;
-          return;
-        }
-        let shareA, shareU;
-        if (mode === 'weighted') {
-          shareA = allocWeighted(m.assigned, cands.map(c => c.assigned));
-          shareU = allocWeighted(m.unread, cands.map(c => c.unread));
-        } else {
-          shareA = splitN(m.assigned, cands.length);
-          shareU = splitN(m.unread, cands.length);
-        }
-        prev.innerHTML =
-          `<div class="ep-head"><b>${cat}</b> 카테고리 ${cands.length}명에게 채팅방 ${m.assigned}건${m.unread?` · 미답변 ${m.unread}건`:''} 분배</div>` +
-          cands.map((c,i) =>
-          `<div class="ep-row">
-             <span class="ep-nm">${c.name} <span class="ep-arrow">→</span> <b class="g">${shareA[i]}건</b> 부여${shareU[i]?` <span class="ep-u">(미답변 ${shareU[i]})</span>`:''}</span>
-             <span class="ep-val">담당 ${c.assigned}→${c.assigned+shareA[i]}</span>
-           </div>`).join('');
-      } else {
-        sel.style.display = '';
-        prev.style.display = 'none';
-      }
-    }
-    document.querySelectorAll('input[name=rmode]').forEach(r => r.addEventListener('change', updateReassignMode));
-
     function closeModal() { document.getElementById('modal').classList.remove('show'); pending = null; }
 
+    // 퇴사 확정 (사유 필수 / 남은 담당 채팅방은 미배정 처리)
     confirmBtn.addEventListener('click', () => {
       if (pending === null) return;
+      if (!selectedReason) { showToast('퇴사 사유를 선택하세요'); return; }
       const snapshot = JSON.parse(JSON.stringify(members));  // 실행취소용
       const m = members[pending];
       const today = new Date().toISOString().slice(0,10);
-      let toast = '';
-      let targets = [];      // [{name, assigned, unread}]
-      let modeLabel = '';
-      const cnt = m.assigned;
-      if (m.assigned > 0) {
-        const mode = getRMode();
-        if (mode === 'even' || mode === 'weighted') {
-          modeLabel = mode === 'weighted' ? '가중 분배' : '균등 분배';
-          const cands = evenCandidates(pending);
-          if (cands.length) {
-            const sA = mode === 'weighted' ? allocWeighted(m.assigned, cands.map(c=>c.assigned)) : splitN(m.assigned, cands.length);
-            const sU = mode === 'weighted' ? allocWeighted(m.unread, cands.map(c=>c.unread)) : splitN(m.unread, cands.length);
-            cands.forEach((c,i) => { c.assigned += sA[i]; c.unread += sU[i]; if (sA[i] > 0) targets.push({name:c.name, assigned:sA[i], unread:sU[i]}); });
-            toast = `${cnt}건을 ${cands.length}명에게 ${modeLabel}했어요`;
-          } else { toast = `이관 대상이 없어 ${cnt}건이 미배정으로 남았어요`; modeLabel = '미배정'; }
-        } else {
-          modeLabel = '단일 이관';
-          const ti = parseInt(document.getElementById('reassign-target').value, 10);
-          if (ti >= 0 && members[ti]) {
-            members[ti].assigned += m.assigned;
-            members[ti].unread += m.unread;
-            targets.push({name:members[ti].name, assigned:m.assigned, unread:m.unread});
-            toast = `${cnt}건을 ${members[ti].name} 님에게 이관했어요`;
-          } else { toast = `${cnt}건이 미배정으로 남았어요`; modeLabel = '미배정'; }
-        }
-        m.assigned = 0; m.unread = 0;
-      } else { toast = `${m.name} 님 퇴사 처리 완료`; }
+      const leftover = m.assigned;
+      m.rooms = [];                 // 남은 방은 미배정으로
       m.state = 'resigned';
       m.leave = document.getElementById('modal-date').value || today;
-
-      // 이력 기록
+      m.reason = selectedReason;
       m.history = m.history || [];
-      m.history.push({ date: today, kind:'out', mode: modeLabel, total: cnt, targets });
-      targets.forEach(t => {
-        const rc = members.find(x => x.name === t.name);
-        if (rc) { rc.history = rc.history || []; rc.history.push({ date: today, kind:'in', from: m.name, assigned: t.assigned, unread: t.unread }); }
-      });
+      m.history.push({ date: today, kind:'resign', reason: selectedReason, leftover });
+      recount();
 
       const wasIdx = pending;
       closeModal();
       render();
       renderTree();
       if (detailIdx === wasIdx) openMemberDetail(wasIdx);
-      showToast(toast, () => {       // 실행취소
+      const tail = leftover > 0 ? ` (미이관 ${leftover}건 미배정)` : '';
+      showToast(`${m.name} 님 퇴사 처리 · 사유: ${selectedReason}${tail}`, () => {
         members = snapshot;
+        recount();
         render(); renderTree();
         if (detailIdx !== null) openMemberDetail(detailIdx);
         showToast('실행취소됨');
       });
     });
 
-    // ── 구성원 상세 패널 ──
+    // ── 구성원 상세 패널 (담당 채팅방 체크박스 → 다른 담당자에게 이관) ──
     let detailIdx = null;
     function openMemberDetail(idx) {
       detailIdx = idx;
       const m = members[idx];
       const panel = document.getElementById('member-detail');
-      const myRooms = rooms.filter(r => r.owner === m.name);
+      const myRooms = m.rooms || [];
+
+      // 담당 채팅방 체크리스트
       const roomHtml = myRooms.length
-        ? myRooms.map(r => `<div class="md-room"><span class="rn">${r.cust}</span>
-            <span class="rc ${r.ch==='전화'?'tm':''}">${r.ch==='전화'?'전화':'채팅'}</span>
-            ${r.state==='unanswered'?'<span class="un">미답변</span>':''}</div>`).join('')
-        : `<div class="md-empty">표시할 담당 방 샘플이 없어요 (총 ${m.assigned}건).</div>`;
-      // 이관/수신 이력
+        ? myRooms.map(r => `
+            <label class="md-room">
+              <input type="checkbox" class="room-ck" value="${r.id}">
+              <span class="rn">${r.cust}</span>
+              <span class="rc">${r.category}</span>
+              <span class="st-sm">${r.status}</span>
+              ${r.state==='unanswered'?'<span class="un">미답변</span>':''}
+            </label>`).join('')
+        : `<div class="md-empty">담당 채팅방이 없어요.</div>`;
+
+      // 이관 대상 드롭다운 (재직 컨설턴트, 본인 제외)
+      const cands = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트');
+      const targetOpts = '<option value="">담당자 선택…</option>' +
+        cands.map(c => `<option value="${members.indexOf(c)}">${c.name} · ${c.category || c.channel || '-'} (담당 ${c.assigned})</option>`).join('');
+      const reassignBar = (m.state === 'active' && myRooms.length)
+        ? `<div class="reassign-bar">
+             <label class="ck-all"><input type="checkbox" id="ck-all"> 전체 선택</label>
+             <select class="modal-select" id="md-target" style="margin:8px 0;">${targetOpts}</select>
+             <button class="btn-assign" id="md-assign">선택 채팅방 이관</button>
+           </div>`
+        : '';
+
+      // 이력
       const hist = (m.history || []).slice().reverse();
       const histHtml = hist.length
         ? hist.map(h => {
-            if (h.kind === 'out') {
-              const who = h.targets.length
-                ? h.targets.map(t => `${t.name} +${t.assigned}${t.unread?`(미답변 ${t.unread})`:''}`).join(', ')
-                : '미배정';
-              return `<div class="hist out"><span class="hd">${h.date}</span>
-                <div class="ht"><b>채팅방 ${h.total}건 이관</b> · ${h.mode}<div class="hsub">→ ${who}</div></div></div>`;
-            }
-            return `<div class="hist in"><span class="hd">${h.date}</span>
-              <div class="ht"><b>${h.from} 퇴사분 +${h.assigned}건</b> 수신${h.unread?` · 미답변 ${h.unread}`:''}</div></div>`;
+            if (h.kind === 'resign') return `<div class="hist out"><span class="hd">${h.date}</span><div class="ht"><b>퇴사 처리</b> · 사유: ${h.reason}${h.leftover?` · 미이관 ${h.leftover}건`:''}</div></div>`;
+            if (h.kind === 'out') return `<div class="hist out"><span class="hd">${h.date}</span><div class="ht"><b>채팅방 ${h.n}건 이관</b><div class="hsub">→ ${h.to}</div></div></div>`;
+            return `<div class="hist in"><span class="hd">${h.date}</span><div class="ht"><b>${h.from} → +${h.n}건</b> 수신</div></div>`;
           }).join('')
         : '<div class="md-empty">이관/수신 이력이 없어요.</div>';
+
       const footBtn = m.state === 'active'
         ? `<button class="resign" onclick="openModal(${idx}, event)">퇴사 처리</button>`
         : `<button class="disabled" disabled>퇴사 완료 (${m.leave})</button>`;
+
       panel.innerHTML = `
         <div class="md-head">
           <span class="av">${m.name[0]}</span>
-          <div><div class="nm">${m.name}</div><div class="role">${m.role}${m.category?' · '+m.category:''}</div></div>
+          <div><div class="nm">${m.name}</div><div class="role">${m.role}${m.category?' · '+m.category:''}${m.state==='resigned'?' · 퇴사':''}</div></div>
           <button class="md-close" onclick="closeMemberDetail()">×</button>
         </div>
         <div class="md-body">
@@ -948,18 +943,50 @@
             <div class="c">담당 채팅방<b>${m.assigned}</b></div>
             <div class="c unread">미답변<b>${m.unread}</b></div>
           </div>
-          <div class="md-row"><span class="k">상태</span><span>${m.state==='resigned'?'퇴사 ('+m.leave+')':'재직중'}</span></div>
-          <div class="md-row"><span class="k">역할</span><span>${m.role}</span></div>
-          <div class="md-row"><span class="k">상담수단</span><span>${m.channel||'-'}</span></div>
-          <div class="md-row"><span class="k">제품</span><span>${m.category||'-'}</span></div>
-          <div class="md-section-t">담당 채팅방</div>
+          <div class="md-section-t">담당 채팅방 ${m.state==='active'&&myRooms.length?'(체크 후 이관)':''}</div>
           ${roomHtml}
-          <div class="md-section-t">이관 / 수신 이력</div>
+          ${reassignBar}
+          <div class="md-section-t">이력</div>
           ${histHtml}
         </div>
         <div class="md-foot">${footBtn}</div>`;
       panel.classList.add('show');
+
+      // 전체 선택
+      const ckAll = document.getElementById('ck-all');
+      if (ckAll) ckAll.addEventListener('change', e => {
+        panel.querySelectorAll('.room-ck').forEach(c => c.checked = e.target.checked);
+      });
+      // 이관 실행
+      const assignBtn = document.getElementById('md-assign');
+      if (assignBtn) assignBtn.addEventListener('click', () => reassignRooms(idx));
     }
+
+    // 선택 채팅방을 다른 담당자에게 이관
+    function reassignRooms(idx) {
+      const m = members[idx];
+      const ids = [...document.querySelectorAll('#member-detail .room-ck:checked')].map(c => +c.value);
+      if (!ids.length) { showToast('이관할 채팅방을 선택하세요'); return; }
+      const ti = parseInt(document.getElementById('md-target').value, 10);
+      if (isNaN(ti) || !members[ti]) { showToast('이관 대상을 선택하세요'); return; }
+      const snapshot = JSON.parse(JSON.stringify(members));
+      const today = new Date().toISOString().slice(0,10);
+      const moving = m.rooms.filter(r => ids.includes(r.id));
+      m.rooms = m.rooms.filter(r => !ids.includes(r.id));
+      members[ti].rooms = (members[ti].rooms || []).concat(moving);
+      // 이력
+      m.history = m.history || []; members[ti].history = members[ti].history || [];
+      m.history.push({ date: today, kind:'out', n: moving.length, to: members[ti].name });
+      members[ti].history.push({ date: today, kind:'in', n: moving.length, from: m.name });
+      recount();
+      render(); renderTree();
+      openMemberDetail(idx);
+      showToast(`${moving.length}건을 ${members[ti].name} 님에게 이관했어요`, () => {
+        members = snapshot; recount(); render(); renderTree(); openMemberDetail(idx);
+        showToast('실행취소됨');
+      });
+    }
+
     function closeMemberDetail() {
       document.getElementById('member-detail').classList.remove('show');
       detailIdx = null;
@@ -1340,6 +1367,7 @@
       });
     });
 
+    genRooms();
     render();
     renderTree();
     renderChats();
