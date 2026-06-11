@@ -1266,8 +1266,8 @@
       document.getElementById('cnt-mine').textContent = rooms.length;
       document.getElementById('cnt-new').textContent = cnt('new');
       document.getElementById('cnt-unans').textContent = cnt('unanswered');
-      // 팀 전체
-      document.getElementById('tcnt-all').textContent = rooms.length;
+      // 팀 전체 (전체 = 신규 + 미답변)
+      document.getElementById('tcnt-all').textContent = cnt('new') + cnt('unanswered');
       document.getElementById('tcnt-new').textContent = cnt('new');
       document.getElementById('tcnt-new-chat').textContent = cnt('new', '채팅');
       document.getElementById('tcnt-new-tel').textContent = cnt('new', '전화');
