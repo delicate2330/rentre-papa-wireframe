@@ -230,6 +230,34 @@
     .btn-reset:hover { background: #f3f3f3; }
 
     /* ── 테이블 ── */
+    /* 가로 토글 필터 바 */
+    .flt-bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:14px 24px 8px; }
+    .flt-bar .chips { display:inline-flex; flex-wrap:wrap; gap:5px; }
+    .flt-div { width:1px; height:20px; background:#e0e0e0; margin:0 8px; }
+    .flt-foot { display:flex; align-items:center; gap:10px; padding:0 24px 12px; border-bottom:1px solid #f0f0f0; }
+    .flt-count { margin-left:auto; font-size:12px; color:#999; }
+
+    /* 구성원 아코디언 */
+    .member-acc-wrap { flex:1; overflow-y:auto; padding:10px 24px 12px; }
+    .acc-empty { text-align:center; color:#bbb; font-size:13px; padding:40px 0; }
+    .acc-item { border:1px solid #eee; border-radius:10px; margin-bottom:8px; overflow:hidden; }
+    .acc-item.open { border-color:#cdd0f5; box-shadow:0 1px 6px rgba(58,61,232,.06); }
+    .acc-item.resigned { opacity:.72; }
+    .acc-head { display:flex; align-items:center; gap:10px; padding:11px 14px; cursor:pointer; }
+    .acc-head:hover { background:#fafaff; }
+    .acc-caret { width:12px; color:#9a9ab0; font-size:11px; flex-shrink:0; }
+    .acc-head .m-avatar { width:28px; height:28px; }
+    .acc-nm { font-weight:700; font-size:14px; }
+    .acc-meta { font-size:12px; color:#999; }
+    .acc-cnt { margin-left:auto; font-size:12px; color:#666; }
+    .acc-cnt b { color:#222; }
+    .acc-cnt .u-num { color:#f0455a; font-weight:700; }
+    .acc-head .btn-resign { flex-shrink:0; }
+    .acc-head .resigned-tag { font-size:11px; color:#bbb; flex-shrink:0; }
+    .acc-body { padding:0 14px; }
+    .acc-item.open .acc-body { padding:4px 14px 14px 36px; border-top:1px solid #f2f2f2; }
+    .acc-room-t { font-size:12px; font-weight:700; color:#666; margin:10px 0 8px; }
+
     .members-table-wrap { flex: 1; overflow-y: auto; padding: 8px 24px 12px; }
     .members-pager { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; border-top:1px solid #eee; font-size:13px; color:#666; }
     .members-pager .pg-left { display:flex; align-items:center; gap:10px; }
@@ -488,73 +516,46 @@
         </div>
       </div>
 
-      <!-- 4단계 필터 -->
-      <div class="filter-panel">
-        <div class="flt-grp">
-          <span class="flt-h">대분류 · 재직상태</span>
-          <div class="chips seg" data-group="status">
-            <button class="chip active" data-v="">전체</button>
-            <button class="chip" data-v="active">재직자</button>
-            <button class="chip" data-v="resigned">퇴사자</button>
-          </div>
+      <!-- 가로 토글 필터 바 -->
+      <div class="flt-bar">
+        <div class="chips" data-group="status">
+          <button class="chip active" data-v="">전체</button>
+          <button class="chip" data-v="active">재직자</button>
+          <button class="chip" data-v="resigned">퇴사자</button>
         </div>
-        <div class="flt-grp">
-          <span class="flt-h">소분류</span>
-          <div class="filter-line"><span class="flt-sublbl">역할</span>
-            <div class="chips" data-group="role">
-              <button class="chip active" data-v="">전체</button>
-              <button class="chip" data-v="관리자">관리자</button>
-              <button class="chip" data-v="컨설턴트">컨설턴트</button>
-            </div>
-          </div>
-          <div class="filter-line"><span class="flt-sublbl">상담수단</span>
-            <div class="chips" data-group="channel">
-              <button class="chip active" data-v="">전체</button>
-              <button class="chip" data-v="전화">전화(TM)</button>
-              <button class="chip" data-v="채팅">채팅</button>
-            </div>
-          </div>
-          <div class="filter-line"><span class="flt-sublbl">제품</span>
-            <div class="chips" data-group="category">
-              <button class="chip active" data-v="">전체</button>
-              <button class="chip" data-v="가전">가전</button>
-              <button class="chip" data-v="정수기">정수기</button>
-              <button class="chip" data-v="TPS">TPS</button>
-              <button class="chip" data-v="상조">상조</button>
-              <button class="chip" data-v="이사">이사</button>
-              <button class="chip" data-v="기타">기타</button>
-            </div>
-          </div>
+        <span class="flt-div"></span>
+        <div class="chips" data-group="role">
+          <button class="chip active" data-v="">역할 전체</button>
+          <button class="chip" data-v="관리자">관리자</button>
+          <button class="chip" data-v="컨설턴트">컨설턴트</button>
         </div>
-        <div class="filter-foot">
-          <input class="search-box" id="search" placeholder="이름 검색 (2글자 이상)" />
-          <button class="btn-reset" id="reset">초기화</button>
+        <span class="flt-div"></span>
+        <div class="chips" data-group="channel">
+          <button class="chip active" data-v="">상담수단 전체</button>
+          <button class="chip" data-v="전화">전화(TM)</button>
+          <button class="chip" data-v="채팅">채팅</button>
         </div>
+        <span class="flt-div"></span>
+        <div class="chips" data-group="category">
+          <button class="chip active" data-v="">제품 전체</button>
+          <button class="chip" data-v="가전">가전</button>
+          <button class="chip" data-v="정수기">정수기</button>
+          <button class="chip" data-v="TPS">TPS</button>
+          <button class="chip" data-v="상조">상조</button>
+          <button class="chip" data-v="이사">이사</button>
+          <button class="chip" data-v="기타">기타</button>
+        </div>
+      </div>
+      <div class="flt-foot">
+        <input class="search-box" id="search" placeholder="이름 검색 (2글자 이상)" />
+        <button class="btn-reset" id="reset">초기화</button>
+        <span class="flt-count" id="flt-count"></span>
       </div>
 
-      <div class="members-table-wrap" id="members-table-wrap">
-        <table class="members">
-          <thead>
-            <tr>
-              <th style="width:18%">이름</th>
-              <th style="width:10%">역할</th>
-              <th style="width:11%">상담수단</th>
-              <th style="width:10%">제품</th>
-              <th style="width:8%">담당</th>
-              <th style="width:9%">미답변</th>
-              <th style="width:9%">상태</th>
-              <th style="width:11%">퇴사일</th>
-              <th style="width:14%">관리</th>
-            </tr>
-          </thead>
-          <tbody id="members-body"></tbody>
-        </table>
-      </div>
+      <!-- 필터 결과: 구성원 아코디언 (이름 클릭 → 담당 채팅방 펼침) -->
+      <div class="member-acc-wrap" id="member-acc"></div>
       <div class="members-pager" id="members-pager"></div>
     </main>
-
-    <!-- 구성원 상세 패널 -->
-    <aside class="member-detail" id="member-detail"></aside>
   </div>
 
   <div id="toast"><span id="toast-msg"></span><button id="toast-undo">실행취소</button></div>
@@ -667,10 +668,12 @@
     let pageSize = 10;
     let currentPage = 1;
 
+    let expandedIdx = null;   // 펼쳐진 구성원
+
     function render() {
-      const body = document.getElementById('members-body');
+      const wrap = document.getElementById('member-acc');
       const q = document.getElementById('search').value.trim();
-      body.innerHTML = '';
+      wrap.innerHTML = '';
 
       const qActive = q.length >= 2;   // 이름 검색은 2글자 이상부터
       const filtered = members.map((m, idx) => ({ m, idx })).filter(({ m }) => {
@@ -681,7 +684,6 @@
         if (qActive && !m.name.includes(q)) return false;
         return true;
       });
-      // 재직자 우선, 퇴사자 후순위 (그 안에서는 원래 순서)
       filtered.sort((a, b) => (a.m.state === 'resigned') - (b.m.state === 'resigned'));
 
       const total = filtered.length;
@@ -690,35 +692,81 @@
       const startI = (currentPage - 1) * pageSize;
       const pageItems = filtered.slice(startI, startI + pageSize);
 
-      pageItems.forEach(({ m, idx }) => {
-        const tr = document.createElement('tr');
-        if (m.state === 'resigned') tr.className = 'row-resigned';
-        const roleCls = m.role === '관리자' ? '' : 'consultant';
-        const statusCls = m.state === 'resigned' ? 'status-resigned' : 'status-active';
-        let actions = m.state === 'active'
-          ? `<button class="btn-act btn-resign" onclick="openModal(${idx}, event)">퇴사 처리</button>`
-          : `<span class="resigned-tag">퇴사 완료</span>`;
-        const unreadCell = m.unread > 0 ? `<span class="u-num">${m.unread}</span>` : '<span class="z-num">0</span>';
+      document.getElementById('flt-count').textContent = `결과 ${total}명`;
 
-        tr.innerHTML = `
-          <td><div class="m-name"><span class="m-avatar">${m.name[0]}</span>${m.name}</div></td>
-          <td><span class="badge-role ${roleCls}">${m.role}</span></td>
-          <td>${m.channel || '-'}</td>
-          <td>${m.category || '-'}</td>
-          <td>${m.assigned || '-'}</td>
-          <td>${unreadCell}</td>
-          <td><span class="status-pill ${statusCls}">${stateLabel[m.state]}</span></td>
-          <td>${m.leave || '-'}</td>
-          <td><div class="actions">${actions}</div></td>`;
-        tr.style.cursor = 'pointer';
-        tr.addEventListener('click', () => openMemberDetail(idx));
-        body.appendChild(tr);
-      });
       if (pageItems.length === 0) {
-        body.innerHTML = '<tr class="empty-row"><td colspan="9">조건에 맞는 구성원이 없어요.</td></tr>';
+        wrap.innerHTML = '<div class="acc-empty">조건에 맞는 구성원이 없어요.</div>';
+      } else {
+        pageItems.forEach(({ m, idx }) => {
+          const open = expandedIdx === idx;
+          const item = document.createElement('div');
+          item.className = 'acc-item' + (open ? ' open' : '') + (m.state === 'resigned' ? ' resigned' : '');
+          const meta = [m.role, m.channel || (m.role==='관리자'?'':'-'), m.category || '-'].filter(Boolean).join(' · ');
+          const stPill = m.state === 'resigned'
+            ? `<span class="status-pill status-resigned">퇴사</span>`
+            : `<span class="status-pill status-active">재직</span>`;
+          item.innerHTML = `
+            <div class="acc-head">
+              <span class="acc-caret">${open ? '▾' : '▸'}</span>
+              <span class="m-avatar">${m.name[0]}</span>
+              <span class="acc-nm">${m.name}</span>
+              <span class="acc-meta">${meta}</span>
+              <span class="acc-cnt">담당 <b>${m.assigned}</b>${m.unread?` · <span class="u-num">미답변 ${m.unread}</span>`:''}</span>
+              ${stPill}
+              ${m.state==='active'
+                ? `<button class="btn-act btn-resign" onclick="openModal(${idx}, event)">퇴사 처리</button>`
+                : `<span class="resigned-tag">${m.leave||''}</span>`}
+            </div>
+            <div class="acc-body">${open ? memberBodyHtml(m, idx) : ''}</div>`;
+          item.querySelector('.acc-head').addEventListener('click', (e) => {
+            if (e.target.closest('.btn-resign')) return;   // 퇴사 버튼은 토글 제외
+            expandedIdx = open ? null : idx;
+            render();
+          });
+          wrap.appendChild(item);
+          if (open) bindAccBody(idx);
+        });
       }
       renderPager(total, totalPages, startI, pageItems.length);
       updateCounts();
+    }
+
+    // 펼친 구성원의 담당 채팅방 체크리스트 + 이관 컨트롤
+    function memberBodyHtml(m, idx) {
+      const myRooms = m.rooms || [];
+      const roomHtml = myRooms.length
+        ? myRooms.map(r => `
+            <label class="md-room">
+              <input type="checkbox" class="room-ck" value="${r.id}">
+              <span class="rn">${r.cust}</span>
+              <span class="rc">${r.category}</span>
+              <span class="st-sm">${r.status}</span>
+              ${r.state==='unanswered'?'<span class="un">미답변</span>':''}
+            </label>`).join('')
+        : `<div class="md-empty">담당 채팅방이 없어요.</div>`;
+      const cands = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트');
+      const targetOpts = '<option value="">담당자 선택…</option>' +
+        cands.map(c => `<option value="${members.indexOf(c)}">${c.name} · ${c.category || c.channel || '-'} (담당 ${c.assigned})</option>`).join('');
+      const bar = (m.state === 'active' && myRooms.length)
+        ? `<div class="reassign-bar">
+             <label class="ck-all"><input type="checkbox" class="md-ckall"> 전체 선택</label>
+             <select class="modal-select md-target" style="margin:8px 0;">${targetOpts}</select>
+             <button class="btn-assign md-assign">선택 채팅방 이관</button>
+           </div>` : '';
+      return `<div class="acc-room-t">담당 채팅방 ${m.state==='active'&&myRooms.length?'(체크 후 이관)':''}</div>${roomHtml}${bar}`;
+    }
+
+    function bindAccBody(idx) {
+      const wrap = document.getElementById('member-acc');
+      const item = wrap.querySelectorAll('.acc-item')[
+        [...wrap.querySelectorAll('.acc-item')].findIndex(el => el.classList.contains('open'))
+      ];
+      if (!item) return;
+      const ckAll = item.querySelector('.md-ckall');
+      if (ckAll) ckAll.addEventListener('change', e =>
+        item.querySelectorAll('.room-ck').forEach(c => c.checked = e.target.checked));
+      const assign = item.querySelector('.md-assign');
+      if (assign) assign.addEventListener('click', () => reassignRooms(idx, item));
     }
 
     function gotoPage(n) { currentPage = n; render(); }
@@ -762,7 +810,7 @@
           group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
           filters[group.dataset.group] = chip.dataset.v;
-          currentPage = 1;
+          currentPage = 1; expandedIdx = null;
           syncQuick();
           render();
         });
@@ -774,7 +822,7 @@
       it.addEventListener('click', () => {
         const v = it.dataset.quick === 'all' ? '' : it.dataset.quick;
         filters.status = v;
-        currentPage = 1;
+        currentPage = 1; expandedIdx = null;
         const grp = document.querySelector('.chips[data-group="status"]');
         grp.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.v === v));
         syncQuick();
@@ -788,9 +836,9 @@
       });
     }
 
-    document.getElementById('search').addEventListener('input', () => { currentPage = 1; render(); });
+    document.getElementById('search').addEventListener('input', () => { currentPage = 1; expandedIdx = null; render(); });
     document.getElementById('reset').addEventListener('click', () => {
-      currentPage = 1;
+      currentPage = 1; expandedIdx = null;
       filters.status = filters.role = filters.channel = filters.category = '';
       document.querySelectorAll('.chips').forEach(g => {
         g.querySelectorAll('.chip').forEach((c,i) => c.classList.toggle('active', i === 0));
@@ -871,125 +919,36 @@
       m.history.push({ date: today, kind:'resign', reason: selectedReason, leftover });
       recount();
 
-      const wasIdx = pending;
       closeModal();
       render();
       renderTree();
-      if (detailIdx === wasIdx) openMemberDetail(wasIdx);
       const tail = leftover > 0 ? ` (미이관 ${leftover}건 미배정)` : '';
       showToast(`${m.name} 님 퇴사 처리 · 사유: ${selectedReason}${tail}`, () => {
         members = snapshot;
         recount();
         render(); renderTree();
-        if (detailIdx !== null) openMemberDetail(detailIdx);
         showToast('실행취소됨');
       });
     });
 
-    // ── 구성원 상세 패널 (담당 채팅방 체크박스 → 다른 담당자에게 이관) ──
-    let detailIdx = null;
-    function openMemberDetail(idx) {
-      detailIdx = idx;
+    // 선택 채팅방을 다른 담당자에게 이관 (아코디언 내부)
+    function reassignRooms(idx, item) {
       const m = members[idx];
-      const panel = document.getElementById('member-detail');
-      const myRooms = m.rooms || [];
-
-      // 담당 채팅방 체크리스트
-      const roomHtml = myRooms.length
-        ? myRooms.map(r => `
-            <label class="md-room">
-              <input type="checkbox" class="room-ck" value="${r.id}">
-              <span class="rn">${r.cust}</span>
-              <span class="rc">${r.category}</span>
-              <span class="st-sm">${r.status}</span>
-              ${r.state==='unanswered'?'<span class="un">미답변</span>':''}
-            </label>`).join('')
-        : `<div class="md-empty">담당 채팅방이 없어요.</div>`;
-
-      // 이관 대상 드롭다운 (재직 컨설턴트, 본인 제외)
-      const cands = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트');
-      const targetOpts = '<option value="">담당자 선택…</option>' +
-        cands.map(c => `<option value="${members.indexOf(c)}">${c.name} · ${c.category || c.channel || '-'} (담당 ${c.assigned})</option>`).join('');
-      const reassignBar = (m.state === 'active' && myRooms.length)
-        ? `<div class="reassign-bar">
-             <label class="ck-all"><input type="checkbox" id="ck-all"> 전체 선택</label>
-             <select class="modal-select" id="md-target" style="margin:8px 0;">${targetOpts}</select>
-             <button class="btn-assign" id="md-assign">선택 채팅방 이관</button>
-           </div>`
-        : '';
-
-      // 이력
-      const hist = (m.history || []).slice().reverse();
-      const histHtml = hist.length
-        ? hist.map(h => {
-            if (h.kind === 'resign') return `<div class="hist out"><span class="hd">${h.date}</span><div class="ht"><b>퇴사 처리</b> · 사유: ${h.reason}${h.leftover?` · 미이관 ${h.leftover}건`:''}</div></div>`;
-            if (h.kind === 'out') return `<div class="hist out"><span class="hd">${h.date}</span><div class="ht"><b>채팅방 ${h.n}건 이관</b><div class="hsub">→ ${h.to}</div></div></div>`;
-            return `<div class="hist in"><span class="hd">${h.date}</span><div class="ht"><b>${h.from} → +${h.n}건</b> 수신</div></div>`;
-          }).join('')
-        : '<div class="md-empty">이관/수신 이력이 없어요.</div>';
-
-      const footBtn = m.state === 'active'
-        ? `<button class="resign" onclick="openModal(${idx}, event)">퇴사 처리</button>`
-        : `<button class="disabled" disabled>퇴사 완료 (${m.leave})</button>`;
-
-      panel.innerHTML = `
-        <div class="md-head">
-          <span class="av">${m.name[0]}</span>
-          <div><div class="nm">${m.name}</div><div class="role">${m.role}${m.category?' · '+m.category:''}${m.state==='resigned'?' · 퇴사':''}</div></div>
-          <button class="md-close" onclick="closeMemberDetail()">×</button>
-        </div>
-        <div class="md-body">
-          <div class="md-stats">
-            <div class="c">담당 채팅방<b>${m.assigned}</b></div>
-            <div class="c unread">미답변<b>${m.unread}</b></div>
-          </div>
-          <div class="md-section-t">담당 채팅방 ${m.state==='active'&&myRooms.length?'(체크 후 이관)':''}</div>
-          ${roomHtml}
-          ${reassignBar}
-          <div class="md-section-t">이력</div>
-          ${histHtml}
-        </div>
-        <div class="md-foot">${footBtn}</div>`;
-      panel.classList.add('show');
-
-      // 전체 선택
-      const ckAll = document.getElementById('ck-all');
-      if (ckAll) ckAll.addEventListener('change', e => {
-        panel.querySelectorAll('.room-ck').forEach(c => c.checked = e.target.checked);
-      });
-      // 이관 실행
-      const assignBtn = document.getElementById('md-assign');
-      if (assignBtn) assignBtn.addEventListener('click', () => reassignRooms(idx));
-    }
-
-    // 선택 채팅방을 다른 담당자에게 이관
-    function reassignRooms(idx) {
-      const m = members[idx];
-      const ids = [...document.querySelectorAll('#member-detail .room-ck:checked')].map(c => +c.value);
+      const ids = [...item.querySelectorAll('.room-ck:checked')].map(c => +c.value);
       if (!ids.length) { showToast('이관할 채팅방을 선택하세요'); return; }
-      const ti = parseInt(document.getElementById('md-target').value, 10);
+      const ti = parseInt(item.querySelector('.md-target').value, 10);
       if (isNaN(ti) || !members[ti]) { showToast('이관 대상을 선택하세요'); return; }
       const snapshot = JSON.parse(JSON.stringify(members));
       const today = new Date().toISOString().slice(0,10);
       const moving = m.rooms.filter(r => ids.includes(r.id));
       m.rooms = m.rooms.filter(r => !ids.includes(r.id));
       members[ti].rooms = (members[ti].rooms || []).concat(moving);
-      // 이력
-      m.history = m.history || []; members[ti].history = members[ti].history || [];
-      m.history.push({ date: today, kind:'out', n: moving.length, to: members[ti].name });
-      members[ti].history.push({ date: today, kind:'in', n: moving.length, from: m.name });
       recount();
-      render(); renderTree();
-      openMemberDetail(idx);
+      render(); renderTree();   // expandedIdx 유지되어 다시 펼쳐짐
       showToast(`${moving.length}건을 ${members[ti].name} 님에게 이관했어요`, () => {
-        members = snapshot; recount(); render(); renderTree(); openMemberDetail(idx);
+        members = snapshot; recount(); render(); renderTree();
         showToast('실행취소됨');
       });
-    }
-
-    function closeMemberDetail() {
-      document.getElementById('member-detail').classList.remove('show');
-      detailIdx = null;
     }
 
     // ========= 수신함 사이드바 구성원 그룹핑 =========
