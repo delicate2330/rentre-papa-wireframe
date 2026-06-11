@@ -305,6 +305,7 @@
     #even-preview .ep-head { font-size:12px; color:#555; margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid #e8e8ee; }
     #even-preview .ep-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:4px 0; color:#444; gap:8px; }
     #even-preview .ep-nm { font-weight:600; flex-shrink:0; }
+    #even-preview .ep-arrow { color:#1a9c5b; font-weight:700; }
     #even-preview .ep-val { color:#999; text-align:right; flex-shrink:0; font-size:11px; }
     #even-preview .ep-u { color:#d24; font-size:11px; }
     #even-preview .ep-val b { color:#222; }
@@ -364,6 +365,8 @@
         <div class="divider"></div>
         <div class="section-title">팀 전체</div>
         <div class="nav-item"><span class="label"><span class="icon-box"></span> 전체</span><span class="count">999+</span></div>
+        <div class="nav-item"><span class="label"><span class="reddot"></span> 신규 인입 메시지</span><span class="count-badge">12</span></div>
+        <div class="nav-item"><span class="label"><span class="icon-box" style="background:#f7b3b3;"></span> 미답변</span><span class="count-badge">31</span></div>
         <div class="nav-item"><span class="label"><span class="icon-box"></span> 미배정</span><span class="count">4</span></div>
         <div class="nav-item sub-item"><span class="label"><span class="icon-box"></span> 채팅</span><span class="count">0</span></div>
         <div class="nav-item sub-item"><span class="label"><span class="icon-box"></span> 전화</span><span class="count">4</span></div>
@@ -827,10 +830,10 @@
           shareU = splitN(m.unread, cands.length);
         }
         prev.innerHTML =
-          `<div class="ep-head"><b>${cat}</b> 카테고리 ${cands.length}명에게 채팅방 ${m.assigned}건${m.unread?` · 미답변 ${m.unread}건`:''} 배정</div>` +
+          `<div class="ep-head"><b>${cat}</b> 카테고리 ${cands.length}명에게 채팅방 ${m.assigned}건${m.unread?` · 미답변 ${m.unread}건`:''} 분배</div>` +
           cands.map((c,i) =>
           `<div class="ep-row">
-             <span class="ep-nm">${c.name}님에게 <b class="g">${shareA[i]}건</b> 배정${shareU[i]?` <span class="ep-u">(미답변 ${shareU[i]})</span>`:''}</span>
+             <span class="ep-nm">${c.name} <span class="ep-arrow">→</span> <b class="g">${shareA[i]}건</b> 부여${shareU[i]?` <span class="ep-u">(미답변 ${shareU[i]})</span>`:''}</span>
              <span class="ep-val">담당 ${c.assigned}→${c.assigned+shareA[i]}</span>
            </div>`).join('');
       } else {
