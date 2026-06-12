@@ -230,12 +230,10 @@
     .btn-reset:hover { background: #f3f3f3; }
 
     /* ── 테이블 ── */
-    /* 가로 토글 필터 바 */
-    .flt-bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:14px 24px 8px; }
-    .flt-bar .chips { display:inline-flex; flex-wrap:wrap; gap:5px; }
-    .flt-div { width:1px; height:20px; background:#e0e0e0; margin:0 8px; }
-    .flt-tag { font-size:11px; font-weight:700; color:#999; margin-right:2px; }
-    .flt-foot { display:flex; align-items:center; gap:10px; padding:0 24px 12px; border-bottom:1px solid #f0f0f0; }
+    /* 드롭다운 필터 바 */
+    .flt-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:14px 24px 12px; border-bottom:1px solid #f0f0f0; }
+    .flt-sel { padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; color:#444; background:#fff; cursor:pointer; min-width:120px; }
+    .flt-sel:focus { outline:none; border-color:#3a3de8; }
     .flt-count { margin-left:auto; font-size:12px; color:#999; }
 
     /* 구성원 아코디언 */
@@ -520,41 +518,32 @@
         </div>
       </div>
 
-      <!-- 가로 토글 필터 바 -->
+      <!-- 드롭다운 필터 바 (한 줄) -->
       <div class="flt-bar">
-        <span class="flt-tag">재직여부</span>
-        <div class="chips seg" data-group="status">
-          <button class="chip active" data-v="">전체</button>
-          <button class="chip" data-v="active">재직자</button>
-          <button class="chip" data-v="resigned">퇴사자</button>
-        </div>
-        <span class="flt-div"></span>
-        <span class="flt-tag">권한</span>
-        <div class="chips seg" data-group="role">
-          <button class="chip active" data-v="">전체</button>
-          <button class="chip" data-v="관리자">관리자</button>
-          <button class="chip" data-v="컨설턴트">컨설턴트</button>
-        </div>
-        <span class="flt-div"></span>
-        <span class="flt-tag">상담수단</span>
-        <div class="chips seg" data-group="channel">
-          <button class="chip active" data-v="">전체</button>
-          <button class="chip" data-v="전화">전화(TM)</button>
-          <button class="chip" data-v="채팅">채팅</button>
-        </div>
-        <span class="flt-div"></span>
-        <span class="flt-tag">카테고리</span>
-        <div class="chips" data-group="category">
-          <button class="chip active" data-v="">전체</button>
-          <button class="chip" data-v="가전">가전</button>
-          <button class="chip" data-v="정수기">정수기</button>
-          <button class="chip" data-v="TPS">TPS</button>
-          <button class="chip" data-v="상조">상조</button>
-          <button class="chip" data-v="이사">이사</button>
-          <button class="chip" data-v="기타">기타</button>
-        </div>
-      </div>
-      <div class="flt-foot">
+        <select class="flt-sel" data-group="status">
+          <option value="">재직여부: 전체</option>
+          <option value="active">재직자</option>
+          <option value="resigned">퇴사자</option>
+        </select>
+        <select class="flt-sel" data-group="role">
+          <option value="">권한: 전체</option>
+          <option value="관리자">관리자</option>
+          <option value="컨설턴트">컨설턴트</option>
+        </select>
+        <select class="flt-sel" data-group="channel">
+          <option value="">상담수단: 전체</option>
+          <option value="전화">전화(TM)</option>
+          <option value="채팅">채팅</option>
+        </select>
+        <select class="flt-sel" data-group="category">
+          <option value="">카테고리: 전체</option>
+          <option value="가전">가전</option>
+          <option value="정수기">정수기</option>
+          <option value="TPS">TPS</option>
+          <option value="상조">상조</option>
+          <option value="이사">이사</option>
+          <option value="기타">기타</option>
+        </select>
         <input class="search-box" id="search" placeholder="이름 검색 (2글자 이상)" />
         <button class="btn-reset" id="reset">초기화</button>
         <span class="flt-count" id="flt-count"></span>
@@ -575,12 +564,13 @@
       <p id="modal-desc"></p>
       <div id="resign-fields">
         <label>퇴사 사유 <span style="color:#d24">*</span> <span class="lbl-sub">(법적 보관용)</span></label>
-        <div class="reason-toggle" id="reason-toggle">
-          <button type="button" class="reason-chip" data-r="자발적 퇴사">자발적 퇴사</button>
-          <button type="button" class="reason-chip" data-r="권고사직">권고사직</button>
-          <button type="button" class="reason-chip" data-r="계약만료">계약만료</button>
-          <button type="button" class="reason-chip" data-r="기타">기타</button>
-        </div>
+        <select class="modal-select" id="reason-select">
+          <option value="">사유 선택…</option>
+          <option value="자발적 퇴사">자발적 퇴사</option>
+          <option value="권고사직">권고사직</option>
+          <option value="계약만료">계약만료</option>
+          <option value="기타">기타</option>
+        </select>
         <label>퇴사일</label>
         <input type="date" id="modal-date" />
         <div id="resign-roominfo" class="resign-roominfo"></div>
@@ -813,28 +803,23 @@
       document.getElementById('stat-resigned').textContent = r;
     }
 
-    // ── 필터 칩 ──
-    document.querySelectorAll('.chips').forEach(group => {
-      group.querySelectorAll('.chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-          group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-          chip.classList.add('active');
-          filters[group.dataset.group] = chip.dataset.v;
-          currentPage = 1; expandedIdx = null;
-          syncQuick();
-          render();
-        });
+    // ── 필터 드롭다운 ──
+    document.querySelectorAll('.flt-sel').forEach(sel => {
+      sel.addEventListener('change', () => {
+        filters[sel.dataset.group] = sel.value;
+        currentPage = 1; expandedIdx = null;
+        syncQuick();
+        render();
       });
     });
 
-    // ── 사이드바 바로가기 (재직상태 필터와 연동) ──
+    // ── 사이드바 바로가기 (재직여부 필터와 연동) ──
     document.querySelectorAll('#view-members .nav-item').forEach(it => {
       it.addEventListener('click', () => {
         const v = it.dataset.quick === 'all' ? '' : it.dataset.quick;
         filters.status = v;
         currentPage = 1; expandedIdx = null;
-        const grp = document.querySelector('.chips[data-group="status"]');
-        grp.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.v === v));
+        document.querySelector('.flt-sel[data-group="status"]').value = v;
         syncQuick();
         render();
       });
@@ -850,9 +835,7 @@
     document.getElementById('reset').addEventListener('click', () => {
       currentPage = 1; expandedIdx = null;
       filters.status = filters.role = filters.channel = filters.category = '';
-      document.querySelectorAll('.chips').forEach(g => {
-        g.querySelectorAll('.chip').forEach((c,i) => c.classList.toggle('active', i === 0));
-      });
+      document.querySelectorAll('.flt-sel').forEach(s => s.value = '');
       document.getElementById('search').value = '';
       syncQuick();
       render();
@@ -862,18 +845,16 @@
     let pendingMode = 'resign';
     const confirmBtn = document.getElementById('modal-confirm');
 
-    let selectedReason = '';
     function openModal(idx, ev) {  // 퇴사
       if (ev) ev.stopPropagation();
       pending = idx; pendingMode = 'resign';
-      selectedReason = '';
       const m = members[idx];
       document.getElementById('modal-title').textContent = '퇴사 처리';
       document.getElementById('modal-desc').textContent =
         `${m.name} 님(${m.role}${m.category ? ' · ' + m.category : ''})을 퇴사 처리합니다.`;
       document.getElementById('resign-fields').style.display = '';
       document.getElementById('modal-date').value = new Date().toISOString().slice(0,10);
-      document.querySelectorAll('#reason-toggle .reason-chip').forEach(c => c.classList.remove('active'));
+      document.getElementById('reason-select').value = '';
       confirmBtn.textContent = '퇴사 처리';
       // 남은 담당 채팅방 안내
       const ri = document.getElementById('resign-roominfo');
@@ -883,15 +864,6 @@
       } else { ri.style.display = 'none'; }
       document.getElementById('modal').classList.add('show');
     }
-
-    // 퇴사 사유 토글
-    document.querySelectorAll('#reason-toggle .reason-chip').forEach(c => {
-      c.addEventListener('click', () => {
-        document.querySelectorAll('#reason-toggle .reason-chip').forEach(x => x.classList.remove('active'));
-        c.classList.add('active');
-        selectedReason = c.dataset.r;
-      });
-    });
 
     // 토스트 (+ 실행취소)
     let toastTimer = null;
@@ -916,6 +888,7 @@
     // 퇴사 확정 (사유 필수 / 남은 담당 채팅방은 미배정 처리)
     confirmBtn.addEventListener('click', () => {
       if (pending === null) return;
+      const selectedReason = document.getElementById('reason-select').value;
       if (!selectedReason) { showToast('퇴사 사유를 선택하세요'); return; }
       const snapshot = JSON.parse(JSON.stringify(members));  // 실행취소용
       const m = members[pending];
