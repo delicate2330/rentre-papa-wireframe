@@ -234,6 +234,7 @@
     .flt-bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:14px 24px 8px; }
     .flt-bar .chips { display:inline-flex; flex-wrap:wrap; gap:5px; }
     .flt-div { width:1px; height:20px; background:#e0e0e0; margin:0 8px; }
+    .flt-tag { font-size:11px; font-weight:700; color:#999; margin-right:2px; }
     .flt-foot { display:flex; align-items:center; gap:10px; padding:0 24px 12px; border-bottom:1px solid #f0f0f0; }
     .flt-count { margin-left:auto; font-size:12px; color:#999; }
 
@@ -334,10 +335,11 @@
     .modal-select { width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:13px; margin-bottom:6px; }
     .lbl-sub { font-size:11px; color:#aaa; font-weight:400; }
     /* 퇴사 사유 토글 */
-    .reason-toggle { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
-    .reason-chip { padding:7px 14px; border:1px solid #ddd; border-radius:20px; background:#fff; cursor:pointer; font-size:13px; color:#555; }
+    .reason-toggle { display:inline-flex; flex-wrap:wrap; border:1px solid #ddd; border-radius:9px; overflow:hidden; margin-bottom:16px; }
+    .reason-chip { padding:9px 16px; border:none; border-right:1px solid #eee; background:#fff; cursor:pointer; font-size:13px; color:#555; }
+    .reason-chip:last-child { border-right:none; }
     .reason-chip:hover { background:#f5f5f8; }
-    .reason-chip.active { background:#d24; color:#fff; border-color:#d24; }
+    .reason-chip.active { background:#d24; color:#fff; }
     .resign-roominfo { background:#fff7f0; border:1px solid #f0d9c0; color:#a85a1a; font-size:12px; padding:9px 11px; border-radius:8px; line-height:1.5; }
     /* 상세 패널 - 담당 채팅방 체크리스트 */
     .md-room { display:flex; align-items:center; gap:8px; padding:8px 6px; border:1px solid #f0f0f0; border-radius:8px; margin-bottom:6px; cursor:pointer; }
@@ -520,26 +522,30 @@
 
       <!-- 가로 토글 필터 바 -->
       <div class="flt-bar">
-        <div class="chips" data-group="status">
+        <span class="flt-tag">재직여부</span>
+        <div class="chips seg" data-group="status">
           <button class="chip active" data-v="">전체</button>
           <button class="chip" data-v="active">재직자</button>
           <button class="chip" data-v="resigned">퇴사자</button>
         </div>
         <span class="flt-div"></span>
-        <div class="chips" data-group="role">
-          <button class="chip active" data-v="">역할 전체</button>
+        <span class="flt-tag">권한</span>
+        <div class="chips seg" data-group="role">
+          <button class="chip active" data-v="">전체</button>
           <button class="chip" data-v="관리자">관리자</button>
           <button class="chip" data-v="컨설턴트">컨설턴트</button>
         </div>
         <span class="flt-div"></span>
-        <div class="chips" data-group="channel">
-          <button class="chip active" data-v="">상담수단 전체</button>
+        <span class="flt-tag">상담수단</span>
+        <div class="chips seg" data-group="channel">
+          <button class="chip active" data-v="">전체</button>
           <button class="chip" data-v="전화">전화(TM)</button>
           <button class="chip" data-v="채팅">채팅</button>
         </div>
         <span class="flt-div"></span>
+        <span class="flt-tag">카테고리</span>
         <div class="chips" data-group="category">
-          <button class="chip active" data-v="">제품 전체</button>
+          <button class="chip active" data-v="">전체</button>
           <button class="chip" data-v="가전">가전</button>
           <button class="chip" data-v="정수기">정수기</button>
           <button class="chip" data-v="TPS">TPS</button>
