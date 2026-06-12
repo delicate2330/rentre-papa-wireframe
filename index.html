@@ -349,6 +349,8 @@
     .md-room .un { margin-left:auto; font-size:11px; color:#d24; font-weight:700; }
     .reassign-bar { margin-top:10px; padding:10px; background:#f7f7fb; border:1px solid #eee; border-radius:8px; }
     .reassign-bar .ck-all { display:flex; align-items:center; gap:6px; font-size:12px; color:#555; cursor:pointer; }
+    .ck-all-top { display:flex; align-items:center; gap:6px; font-size:12px; color:#555; cursor:pointer; padding:4px 6px 8px; border-bottom:1px solid #f0f0f0; margin-bottom:8px; }
+    .reassign-bar .md-target { margin-bottom:8px; }
     .btn-assign { width:100%; padding:9px; background:#3a3de8; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
     .btn-assign:hover { background:#3133c0; }
     #reassign-block { margin-bottom:16px; }
@@ -747,13 +749,15 @@
       const cands = members.filter((x,i) => i !== idx && x.state === 'active' && x.role === '컨설턴트');
       const targetOpts = '<option value="">담당자 선택…</option>' +
         cands.map(c => `<option value="${members.indexOf(c)}">${c.name} · ${c.category || c.channel || '-'} (담당 ${c.assigned})</option>`).join('');
-      const bar = (m.state === 'active' && myRooms.length)
+      const canAssign = m.state === 'active' && myRooms.length;
+      const topCk = canAssign
+        ? `<label class="ck-all ck-all-top"><input type="checkbox" class="md-ckall"> 전체 선택</label>` : '';
+      const bottomBar = canAssign
         ? `<div class="reassign-bar">
-             <label class="ck-all"><input type="checkbox" class="md-ckall"> 전체 선택</label>
-             <select class="modal-select md-target" style="margin:8px 0;">${targetOpts}</select>
+             <select class="modal-select md-target">${targetOpts}</select>
              <button class="btn-assign md-assign">선택 채팅방 이관</button>
            </div>` : '';
-      return `<div class="acc-room-t">담당 채팅방 ${m.state==='active'&&myRooms.length?'(체크 후 이관)':''}</div>${roomHtml}${bar}`;
+      return `<div class="acc-room-t">담당 채팅방 ${canAssign?'(체크 후 이관)':''}</div>${topCk}${roomHtml}${bottomBar}`;
     }
 
     function bindAccBody(idx) {
