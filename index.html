@@ -76,6 +76,16 @@
     .mg-sort { color:#3a3de8; cursor:pointer; }
     .mg-tree { display:block; }
     .mg-tree.collapsed { display:none; }
+    .mg-team-head { display:flex; align-items:center; gap:5px; padding:7px 2px 5px 4px; cursor:pointer; border-top:1px solid #eee; margin-top:2px; }
+    .mg-team-head:hover { background:#f6f6fb; }
+    .mg-team-head .caret { color:#9a9ab0; font-size:10px; width:12px; }
+    .mg-team-head .tnm { font-size:13px; font-weight:700; color:#333; }
+    .mg-team-head .tsv { font-size:10px; color:#5b5fcf; background:#eef0ff; border-radius:5px; padding:1px 6px; }
+    .mg-team-head .tmeta { margin-left:auto; font-size:11px; color:#999; }
+    .mg-team-head .tmeta .u { color:#f0455a; font-weight:700; }
+    .mg-team-body.collapsed { display:none; }
+    .mg-grp-head .meta { font-size:11px; color:#aaa; font-weight:500; }
+    .mg-grp-head .meta .u { color:#f0455a; }
     .mg-section-head { display:flex; align-items:center; gap:6px; padding:8px 2px 4px; font-size:12px; font-weight:700; }
     .mg-section-head .dot { width:7px; height:7px; border-radius:50%; background:#1a9c5b; }
     .mg-section-head.resigned .dot { background:#bbb; }
@@ -456,18 +466,10 @@
           </div>
           <select class="mg-select" id="mg-state">
             <option value="">재직 상태: 전체</option>
-            <option value="active">재직 상태: 재직자</option>
-            <option value="resigned">재직 상태: 퇴사자</option>
-          </select>
-          <select class="mg-select" id="mg-cat">
-            <option value="">카테고리: 전체</option>
+            <option value="active">재직자</option>
+            <option value="resigned">퇴사자</option>
           </select>
           <input class="mg-search" id="mg-searchbox" placeholder="🔍 상담원 검색" />
-          <div class="mg-btns">
-            <button id="mg-apply">적용</button>
-            <button id="mg-allbtn">전체</button>
-            <button id="mg-reset">초기화</button>
-          </div>
           <div class="mg-check">
             <label><input type="checkbox" id="mg-unreadonly"> 미답변만 보기</label>
             <span class="mg-sort" id="mg-sort">미답변순 ↓</span>
@@ -679,15 +681,34 @@
       });
     }
 
-    // 컨설턴트는 복수 카테고리 담당 가능 (사람에게 카테고리를 부여)
+    // 팀(SV) 정의 — 조직도 기준
+    const TEAMS = [
+      { key:'TPS팀',   sv:'윤승현' },
+      { key:'정수기팀', sv:'최송임' },
+      { key:'가전팀',   sv:'박하나' },
+      { key:'신규팀',   sv:'-' },
+    ];
+    const TEAM_OF = {
+      '곽예진':'TPS팀','전상엽':'TPS팀','강소정':'TPS팀','정다운':'TPS팀','채새미':'TPS팀','윤승현':'TPS팀',
+      '김시인':'정수기팀','양송아':'정수기팀','김성은':'정수기팀','임은경':'정수기팀',
+      '김용일':'가전팀','김민강':'가전팀','길수진':'가전팀',
+      '윤민혁':'신규팀',
+    };
+
+    // 컨설턴트는 복수 카테고리 담당 가능 (사람에게 카테고리를 부여) + 소속 팀(SV)
     function initCategories() {
-      const multi = { '곽예진':['TPS','정수기'], '강소정':['TPS','가전'], '정다운':['TPS','상조'] };
+      const multi = {
+        '곽예진':['TPS','정수기'], '강소정':['TPS','가전'], '정다운':['TPS','상조'],
+        '윤승현':['TPS'], '길수진':['가전'],
+      };
       members.forEach(m => {
         if (m.role === '컨설턴트') {
           m.categories = multi[m.name] || (m.category ? [m.category] : []);
-          m.category = m.categories[0] || '';   // 대표(첫) 카테고리 — 트리/방 분류용
+          m.category = m.categories[0] || '';   // 대표(첫) 카테고리 — 방 분류용
+          m.team = TEAM_OF[m.name] || '신규팀';
         } else {
           m.categories = [];
+          m.team = '';                            // 관리자/SV는 팀 트리에서 제외
         }
       });
     }
@@ -1013,99 +1034,31 @@
     const tree = { state:'', cat:'', unreadOnly:false, sortByUnread:true, q:'' };
     const treeCollapsed = new Set();  // 접힌 카테고리 기억
 
-    // 카테고리 드롭다운 채우기
-    (function fillCat(){
-      const sel = document.getElementById('mg-cat');
-      const present = CAT_ORDER.filter(c => members.some(m => grpOf(m) === c));
-      present.forEach(c => {
-        const o = document.createElement('option'); o.value = c; o.textContent = '카테고리: ' + c; sel.appendChild(o);
-      });
-    })();
-
-    // 그룹핑 레벨 정의: 역할 → 상담수단 → 카테고리
-    const LEVELS = [
-      { key:'role',     cls:'lv-role',     valOf: m => m.role,            order:['관리자','컨설턴트'] },
-      { key:'channel',  cls:'lv-channel',  valOf: m => (m.channel==='전화'?'전화(TM)':m.channel), order:['전화(TM)','채팅'] },
-      { key:'category', cls:'lv-category', valOf: m => m.category,        order:['가전','정수기','TPS','상조','이사','기타'] },
-    ];
+    // 카테고리별 미답변 수 (그 카테고리 방만)
+    function catUnread(m, cat) {
+      return (m.rooms || []).filter(r => r.category === cat && r.state === 'unanswered').length;
+    }
     const sumU = arr => arr.reduce((s,m)=>s+m.unread,0);
 
-    function memberRow(m) {
+    function memberRow(m, u, depth) {
       const el = document.createElement('div');
-      el.className = 'mg-member' + (m.unread>0?' has-unread':'') + (m.state==='resigned'?' resigned':'');
+      el.className = 'mg-member' + (u>0?' has-unread':'') + (m.state==='resigned'?' resigned':'');
+      el.style.paddingLeft = (4 + depth*11) + 'px';
       el.innerHTML = `
         <span class="av"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
         <span class="nm">${m.name}</span>
-        ${m.unread>0 ? `<span class="ub">${m.unread}</span>` : `<span class="zero">0</span>`}`;
+        ${u>0 ? `<span class="ub">${u}</span>` : `<span class="zero">0</span>`}`;
       return el;
     }
 
-    // 재귀: 주어진 레벨부터 중첩 그룹 렌더
-    function renderLevel(list, lvIdx, depth, wrap) {
-      if (lvIdx >= LEVELS.length) { // 더 분류할 레벨 없음 → 멤버 출력
-        let mem = tree.sortByUnread
-          ? list.slice().sort((a,b)=>b.unread-a.unread)
-          : list.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-        mem.forEach(m => { const r = memberRow(m); r.style.paddingLeft = (4 + depth*10) + 'px'; wrap.appendChild(r); });
-        return;
-      }
-      const lv = LEVELS[lvIdx];
-      // 이 레벨 값이 전부 비어있으면 레벨 건너뜀
-      if (list.every(m => !lv.valOf(m))) { renderLevel(list, lvIdx+1, depth, wrap); return; }
-
-      let vals = [...new Set(list.map(lv.valOf).filter(Boolean))];
-      vals.sort((a,b) => {
-        if (tree.sortByUnread) {
-          return sumU(list.filter(m=>lv.valOf(m)===b)) - sumU(list.filter(m=>lv.valOf(m)===a));
-        }
-        const ia = lv.order.indexOf(a), ib = lv.order.indexOf(b);
-        return (ia<0?99:ia) - (ib<0?99:ib);
-      });
-
-      vals.forEach(v => {
-        const sub = list.filter(m => lv.valOf(m) === v);
-        const h = document.createElement('div');
-        if (lv.key === 'channel') {
-          h.className = 'mg-chan-head';
-          h.style.paddingLeft = (2 + depth*10) + 'px';
-          const c = (v.indexOf('TM') >= 0 || v.indexOf('전화') >= 0) ? 'tm' : 'chat';
-          h.innerHTML = `<span class="chip-ch ${c}">${v}</span>`;
-          wrap.appendChild(h);
-          renderLevel(sub, lvIdx+1, depth+1, wrap);
-        } else if (lv.key === 'category') {
-          // 카테고리: 접기/펼치기 토글
-          const key = 'cat:' + v + ':' + depth;
-          const collapsed = treeCollapsed.has(key);
-          h.className = 'mg-grp-head lv-category';
-          h.style.paddingLeft = (2 + depth*10) + 'px';
-          h.innerHTML = `<span class="gl">${v}</span><span class="caret">${collapsed?'▸':'▾'}</span>`;
-          const body = document.createElement('div');
-          body.className = 'mg-cat-body' + (collapsed?' collapsed':'');
-          h.addEventListener('click', () => {
-            if (treeCollapsed.has(key)) treeCollapsed.delete(key); else treeCollapsed.add(key);
-            body.classList.toggle('collapsed');
-            h.querySelector('.caret').textContent = body.classList.contains('collapsed') ? '▸' : '▾';
-          });
-          wrap.appendChild(h);
-          wrap.appendChild(body);
-          renderLevel(sub, lvIdx+1, depth+1, body);
-        } else {
-          h.className = 'mg-grp-head ' + lv.cls;
-          if (lv.key === 'role') h.className += (v === '관리자' ? ' admin' : ' consultant');
-          h.style.paddingLeft = (2 + depth*10) + 'px';
-          h.innerHTML = `<span class="gl">${v}</span>`;
-          wrap.appendChild(h);
-          renderLevel(sub, lvIdx+1, depth+1, wrap);
-        }
-      });
-    }
-
+    // 트리: 재직상태 → 팀(SV) → 카테고리 → 상담수단(채팅/TM) → 사람
     function renderTree() {
       const wrap = document.getElementById('mg-tree');
       wrap.innerHTML = '';
 
-      document.getElementById('mg-count').textContent = members.length;
-      document.getElementById('mg-unread').textContent = '미답변 ' + sumU(members);
+      const cons = members.filter(m => m.role === '컨설턴트');
+      document.getElementById('mg-count').textContent = cons.length;
+      document.getElementById('mg-unread').textContent = '미답변 ' + sumU(cons);
 
       const sections = [
         { key:'active',   label:'재직자', cls:'' },
@@ -1113,8 +1066,7 @@
       ].filter(s => !tree.state || tree.state === s.key);
 
       sections.forEach(sec => {
-        let list = members.filter(m => m.state === sec.key);
-        if (tree.cat) list = list.filter(m => grpOf(m) === tree.cat);
+        let list = cons.filter(m => m.state === sec.key);
         if (tree.unreadOnly) list = list.filter(m => m.unread > 0);
         if (tree.q) list = list.filter(m => m.name.includes(tree.q));
         if (list.length === 0) return;
@@ -1125,7 +1077,61 @@
           <span class="meta">${list.length}명 · 미답변 <span class="u">${sumU(list)}</span></span>`;
         wrap.appendChild(sh);
 
-        renderLevel(list, 0, 1, wrap);
+        // 팀(SV) 단위
+        TEAMS.forEach(team => {
+          const teamMem = list.filter(m => m.team === team.key);
+          if (!teamMem.length) return;
+          const teamU = sumU(teamMem);
+          const tkey = 'team:' + sec.key + ':' + team.key;
+          const tCollapsed = treeCollapsed.has(tkey);
+
+          const th = document.createElement('div');
+          th.className = 'mg-team-head';
+          th.innerHTML = `<span class="caret">${tCollapsed?'▸':'▾'}</span>
+            <span class="tnm">${team.key}</span><span class="tsv">SV ${team.sv}</span>
+            <span class="tmeta">${teamMem.length}명 · 미답변 <span class="u">${teamU}</span></span>`;
+          const tbody = document.createElement('div');
+          tbody.className = 'mg-team-body' + (tCollapsed?' collapsed':'');
+          th.addEventListener('click', () => {
+            if (treeCollapsed.has(tkey)) treeCollapsed.delete(tkey); else treeCollapsed.add(tkey);
+            tbody.classList.toggle('collapsed');
+            th.querySelector('.caret').textContent = tbody.classList.contains('collapsed') ? '▸' : '▾';
+          });
+          wrap.appendChild(th);
+          wrap.appendChild(tbody);
+
+          // 팀 안에서 카테고리
+          let cats = CAT_LIST.filter(c => teamMem.some(m => (m.categories||[]).includes(c)));
+          if (tree.sortByUnread) {
+            cats.sort((a,b) =>
+              teamMem.filter(m=>m.categories.includes(b)).reduce((s,m)=>s+catUnread(m,b),0) -
+              teamMem.filter(m=>m.categories.includes(a)).reduce((s,m)=>s+catUnread(m,a),0));
+          }
+          cats.forEach(cat => {
+            const catMem = teamMem.filter(m => (m.categories||[]).includes(cat));
+            const catU = catMem.reduce((s,m)=>s+catUnread(m,cat),0);
+            const ch = document.createElement('div');
+            ch.className = 'mg-grp-head lv-category';
+            ch.style.paddingLeft = '14px';
+            ch.innerHTML = `<span class="gl">${cat}</span><span class="meta">· ${catMem.length} · 미답변 <span class="u">${catU}</span></span>`;
+            tbody.appendChild(ch);
+
+            // 상담수단(채팅/TM)
+            ['채팅','전화'].forEach(chan => {
+              let chMem = catMem.filter(m => m.channel === chan);
+              if (!chMem.length) return;
+              const chHead = document.createElement('div');
+              chHead.className = 'mg-chan-head';
+              chHead.style.paddingLeft = '24px';
+              chHead.innerHTML = `<span class="chip-ch ${chan==='전화'?'tm':'chat'}">${chan==='전화'?'전화(TM)':'채팅'}</span>`;
+              tbody.appendChild(chHead);
+
+              if (tree.sortByUnread) chMem = chMem.slice().sort((a,b)=>catUnread(b,cat)-catUnread(a,cat));
+              else chMem = chMem.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+              chMem.forEach(m => tbody.appendChild(memberRow(m, catUnread(m, cat), 3)));
+            });
+          });
+        });
       });
 
       if (!wrap.children.length) {
@@ -1139,24 +1145,8 @@
       t.classList.toggle('collapsed');
       document.getElementById('mg-arrow').textContent = t.classList.contains('collapsed') ? '∨' : '∧';
     });
-    document.getElementById('mg-apply').addEventListener('click', () => {
-      tree.state = document.getElementById('mg-state').value;
-      tree.cat = document.getElementById('mg-cat').value;
-      renderTree();
-    });
-    document.getElementById('mg-allbtn').addEventListener('click', () => {
-      document.getElementById('mg-state').value = '';
-      document.getElementById('mg-cat').value = '';
-      tree.state = ''; tree.cat = '';
-      renderTree();
-    });
-    document.getElementById('mg-reset').addEventListener('click', () => {
-      document.getElementById('mg-state').value = '';
-      document.getElementById('mg-cat').value = '';
-      document.getElementById('mg-unreadonly').checked = false;
-      tree.state=''; tree.cat=''; tree.unreadOnly=false; tree.sortByUnread=true;
-      document.getElementById('mg-sort').textContent = '미답변순 ↓';
-      renderTree();
+    document.getElementById('mg-state').addEventListener('change', e => {
+      tree.state = e.target.value; renderTree();
     });
     document.getElementById('mg-unreadonly').addEventListener('change', e => {
       tree.unreadOnly = e.target.checked; renderTree();
