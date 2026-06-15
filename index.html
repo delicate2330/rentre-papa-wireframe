@@ -256,6 +256,12 @@
     .acc-body { padding:0 14px; }
     .acc-item.open .acc-body { padding:4px 14px 14px 36px; border-top:1px solid #f2f2f2; }
     .acc-room-t { font-size:12px; font-weight:700; color:#666; margin:10px 0 8px; }
+    .cat-tags { display:inline-flex; gap:4px; flex-wrap:wrap; }
+    .cat-tag { font-size:10px; padding:2px 7px; border-radius:5px; background:#eef0ff; color:#3a3de8; font-weight:600; }
+    .cat-edit { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+    .cat-chip { padding:5px 12px; border:1px solid #ddd; border-radius:16px; background:#fff; cursor:pointer; font-size:12px; color:#666; }
+    .cat-chip:hover { background:#f3f3f8; }
+    .cat-chip.active { background:#3a3de8; color:#fff; border-color:#3a3de8; }
 
     .members-table-wrap { flex: 1; overflow-y: auto; padding: 8px 24px 12px; }
     .members-pager { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; border-top:1px solid #eee; font-size:13px; color:#666; }
@@ -557,6 +563,18 @@
 
   <div id="toast"><span id="toast-msg"></span><button id="toast-undo">실행취소</button></div>
 
+  <!-- 확인 경고 다이얼로그 -->
+  <div class="modal-back" id="confirm-modal">
+    <div class="modal">
+      <h3 id="cf-title">⚠️ 퇴사 처리 확인</h3>
+      <p id="cf-msg"></p>
+      <div class="modal-btns">
+        <button class="btn-cancel" id="cf-cancel">취소</button>
+        <button class="btn-confirm" id="cf-ok">퇴사 처리</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 모달 -->
   <div class="modal-back" id="modal">
     <div class="modal">
@@ -638,10 +656,11 @@
           const n = 3 + ((mi * 3 + 1) % 4);           // 3~6건
           const unAns = m.unread > 10 ? 2 : (m.unread > 0 ? 1 : 0);
           for (let i = 0; i < n; i++) {
+            const cats = (m.categories && m.categories.length) ? m.categories : [m.category || '전화'];
             m.rooms.push({
               id: _rid++,
               cust: CUSTS[_cseq % CUSTS.length],
-              category: m.category || '전화',
+              category: cats[i % cats.length],
               status: RSTS[(_cseq + i) % RSTS.length],
               state: i < unAns ? 'unanswered' : 'normal'
             });
@@ -658,6 +677,20 @@
         m.unread = (m.rooms || []).filter(r => r.state === 'unanswered').length;
       });
     }
+
+    // 컨설턴트는 복수 카테고리 담당 가능 (사람에게 카테고리를 부여)
+    function initCategories() {
+      const multi = { '곽예진':['TPS','정수기'], '강소정':['TPS','가전'], '정다운':['TPS','상조'] };
+      members.forEach(m => {
+        if (m.role === '컨설턴트') {
+          m.categories = multi[m.name] || (m.category ? [m.category] : []);
+          m.category = m.categories[0] || '';   // 대표(첫) 카테고리 — 트리/방 분류용
+        } else {
+          m.categories = [];
+        }
+      });
+    }
+    const CAT_LIST = ['가전','정수기','TPS','상조','이사','기타'];
 
     const filters = { status:'', role:'', channel:'', category:'' };
     let pending = null;
@@ -678,7 +711,7 @@
         if (filters.status && m.state !== filters.status) return false;
         if (filters.role && m.role !== filters.role) return false;
         if (filters.channel && m.channel !== filters.channel) return false;
-        if (filters.category && m.category !== filters.category) return false;
+        if (filters.category && !((m.categories || []).includes(filters.category))) return false;
         if (qActive && !m.name.includes(q)) return false;
         return true;
       });
@@ -699,7 +732,10 @@
           const open = expandedIdx === idx;
           const item = document.createElement('div');
           item.className = 'acc-item' + (open ? ' open' : '') + (m.state === 'resigned' ? ' resigned' : '');
-          const meta = [m.role, m.channel || (m.role==='관리자'?'':'-'), m.category || '-'].filter(Boolean).join(' · ');
+          const baseMeta = [m.role, m.channel || (m.role==='관리자'?'':'')].filter(Boolean).join(' · ');
+          const catTags = (m.categories && m.categories.length)
+            ? m.categories.map(c => `<span class="cat-tag">${c}</span>`).join('')
+            : '';
           const stPill = m.state === 'resigned'
             ? `<span class="status-pill status-resigned">퇴사</span>`
             : `<span class="status-pill status-active">재직</span>`;
@@ -708,7 +744,8 @@
               <span class="acc-caret">${open ? '▾' : '▸'}</span>
               <span class="m-avatar">${m.name[0]}</span>
               <span class="acc-nm">${m.name}</span>
-              <span class="acc-meta">${meta}</span>
+              <span class="acc-meta">${baseMeta}</span>
+              <span class="cat-tags">${catTags}</span>
               <span class="acc-cnt">담당 <b>${m.assigned}</b>${m.unread?` · <span class="u-num">미답변 ${m.unread}</span>`:''}</span>
               ${stPill}
               ${m.state==='active'
@@ -753,7 +790,13 @@
              <select class="modal-select md-target">${targetOpts}</select>
              <button class="btn-assign md-assign">선택 채팅방 이관</button>
            </div>` : '';
-      return `<div class="acc-room-t">담당 채팅방 ${canAssign?'(체크 후 이관)':''}</div>${topCk}${roomHtml}${bottomBar}`;
+      // 담당 카테고리 부여 (컨설턴트만)
+      const catEditor = m.role === '컨설턴트'
+        ? `<div class="acc-room-t">담당 카테고리 (클릭해서 부여/해제)</div>
+           <div class="cat-edit">
+             ${CAT_LIST.map(c => `<button class="cat-chip ${m.categories.includes(c)?'active':''}" data-c="${c}">${c}</button>`).join('')}
+           </div>` : '';
+      return `${catEditor}<div class="acc-room-t">담당 채팅방 ${canAssign?'(체크 후 이관)':''}</div>${topCk}${roomHtml}${bottomBar}`;
     }
 
     function bindAccBody(idx) {
@@ -767,6 +810,15 @@
         item.querySelectorAll('.room-ck').forEach(c => c.checked = e.target.checked));
       const assign = item.querySelector('.md-assign');
       if (assign) assign.addEventListener('click', () => reassignRooms(idx, item));
+      // 카테고리 부여/해제 토글
+      item.querySelectorAll('.cat-chip').forEach(ch => ch.addEventListener('click', () => {
+        const c = ch.dataset.c;
+        const arr = members[idx].categories;
+        const i = arr.indexOf(c);
+        if (i >= 0) arr.splice(i, 1); else arr.push(c);
+        members[idx].category = arr[0] || '';   // 대표 카테고리 갱신
+        render(); renderTree();                  // 행 태그·필터 즉시 반영 (펼침 유지)
+      }));
     }
 
     function gotoPage(n) { currentPage = n; render(); }
@@ -885,11 +937,34 @@
 
     function closeModal() { document.getElementById('modal').classList.remove('show'); pending = null; }
 
-    // 퇴사 확정 (사유 필수 / 남은 담당 채팅방은 미배정 처리)
+    // 재사용 확인 다이얼로그
+    function showConfirm(msg, onYes) {
+      document.getElementById('cf-msg').innerHTML = msg;
+      const mb = document.getElementById('confirm-modal');
+      const ok = document.getElementById('cf-ok'), cancel = document.getElementById('cf-cancel');
+      const close = () => { mb.classList.remove('show'); ok.onclick = null; cancel.onclick = null; };
+      ok.onclick = () => { close(); onYes(); };
+      cancel.onclick = close;
+      mb.classList.add('show');
+    }
+
+    // 퇴사 확정 → 경고 다이얼로그 → 처리
     confirmBtn.addEventListener('click', () => {
       if (pending === null) return;
       const selectedReason = document.getElementById('reason-select').value;
       if (!selectedReason) { showToast('퇴사 사유를 선택하세요'); return; }
+      const m = members[pending];
+      const leftover = m.assigned;
+      const warn = leftover > 0
+        ? `<b>${m.name}</b> 님을 정말 퇴사 처리하시겠어요?<br><br>
+           <span style="color:#d24;font-weight:600;">담당 채팅방 ${leftover}건이 아직 남아 있어요.</span><br>
+           먼저 상세 패널에서 다른 담당자에게 <b>채팅방을 이관</b>하는 것을 권장합니다.<br>
+           지금 진행하면 남은 ${leftover}건은 <b>미배정</b>으로 처리됩니다.<br><br>사유: ${selectedReason}`
+        : `<b>${m.name}</b> 님을 정말 퇴사 처리하시겠어요?<br><br>담당 채팅방 0건 · 사유: ${selectedReason}`;
+      showConfirm(warn, () => doResign(selectedReason));
+    });
+
+    function doResign(selectedReason) {
       const snapshot = JSON.parse(JSON.stringify(members));  // 실행취소용
       const m = members[pending];
       const today = new Date().toISOString().slice(0,10);
@@ -901,7 +976,6 @@
       m.history = m.history || [];
       m.history.push({ date: today, kind:'resign', reason: selectedReason, leftover });
       recount();
-
       closeModal();
       render();
       renderTree();
@@ -912,7 +986,7 @@
         render(); renderTree();
         showToast('실행취소됨');
       });
-    });
+    }
 
     // 선택 채팅방을 다른 담당자에게 이관 (아코디언 내부)
     function reassignRooms(idx, item) {
@@ -1309,6 +1383,7 @@
       });
     });
 
+    initCategories();
     genRooms();
     render();
     renderTree();
