@@ -1122,8 +1122,8 @@
 
         const sh = document.createElement('div');
         sh.className = 'mg-section-head ' + sec.cls;
-        sh.innerHTML = `<span class="dot"></span>${sec.label}
-          <span class="meta">${list.length}명 · ${headMeta(sumN(list), sumU(list))}</span>`;
+        sh.innerHTML = `<span class="dot"></span>${sec.label}(${list.length})
+          <span class="meta">${headMeta(sumN(list), sumU(list))}</span>`;
         wrap.appendChild(sh);
 
         // 팀(SV) 단위
