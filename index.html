@@ -117,6 +117,15 @@
     .mg-member.resigned .nm { color:#aaa; text-decoration:line-through; }
     .mg-member .ub { margin-left:auto; background:#f0455a; color:#fff; border-radius:11px; font-size:11px; font-weight:700; padding:2px 9px; }
     .mg-member .zero { margin-left:auto; font-size:12px; color:#ccc; }
+    .mg-member .bd-wrap { margin-left:auto; display:inline-flex; gap:4px; align-items:center; }
+    .bd-new { background:#e9f0ff; color:#2f6bff; border-radius:10px; font-size:11px; font-weight:700; padding:2px 8px; }
+    .bd-un { background:#fdeaea; color:#f0455a; border-radius:10px; font-size:11px; font-weight:700; padding:2px 8px; }
+    /* 보기 토글 */
+    .mg-view { display:flex; gap:4px; margin:2px 0 6px; }
+    .mgv { flex:1; padding:6px 0; border:1px solid #e2e2e8; border-radius:7px; background:#fff; font-size:12px; color:#666; cursor:pointer; }
+    .mgv:hover { background:#f5f5f8; }
+    .mgv.active { background:#eef; color:#3a3de8; border-color:#cdd; font-weight:700; }
+    .mg-section-head .meta .n, .mg-team-head .tmeta .n, .mg-grp-head .meta .n { color:#2f6bff; font-weight:700; }
     .mg-search { width:100%; margin-bottom:6px; padding:8px 10px; border:1px solid #e2e2e8; border-radius:8px; font-size:12px; }
 
     /* 레드닷 */
@@ -470,8 +479,12 @@
             <option value="resigned">퇴사자</option>
           </select>
           <input class="mg-search" id="mg-searchbox" placeholder="🔍 상담원 검색" />
+          <div class="mg-view" id="mg-view">
+            <button class="mgv active" data-v="all">전체</button>
+            <button class="mgv" data-v="new">🔵 신규</button>
+            <button class="mgv" data-v="unanswered">🔴 미답변</button>
+          </div>
           <div class="mg-check">
-            <label><input type="checkbox" id="mg-unreadonly"> 미답변만 보기</label>
             <span class="mg-sort" id="mg-sort">미답변순 ↓</span>
           </div>
           <div class="mg-tree" id="mg-tree"></div>
@@ -658,14 +671,16 @@
         if (m.state === 'active' && m.role === '컨설턴트') {
           const n = 3 + ((mi * 3 + 1) % 4);           // 3~6건
           const unAns = m.unread > 10 ? 2 : (m.unread > 0 ? 1 : 0);
+          const newCnt = (m.unread > 0 ? 1 : 0) + (mi % 2 === 0 ? 1 : 0);  // 0~2 신규
           for (let i = 0; i < n; i++) {
             const cats = (m.categories && m.categories.length) ? m.categories : [m.category || '전화'];
+            const st = i < unAns ? 'unanswered' : (i < unAns + newCnt ? 'new' : 'normal');
             m.rooms.push({
               id: _rid++,
               cust: CUSTS[_cseq % CUSTS.length],
               category: cats[i % cats.length],
               status: RSTS[(_cseq + i) % RSTS.length],
-              state: i < unAns ? 'unanswered' : 'normal'
+              state: st
             });
             _cseq++;
           }
@@ -678,6 +693,7 @@
       members.forEach(m => {
         m.assigned = (m.rooms || []).length;
         m.unread = (m.rooms || []).filter(r => r.state === 'unanswered').length;
+        m.newcnt = (m.rooms || []).filter(r => r.state === 'new').length;
       });
     }
 
@@ -1031,24 +1047,51 @@
     }
 
     // ========= 수신함 사이드바 구성원 그룹핑 =========
-    const tree = { state:'', cat:'', unreadOnly:false, sortByUnread:true, q:'' };
-    const treeCollapsed = new Set();  // 접힌 카테고리 기억
+    const tree = { state:'', view:'all', sortByUnread:true, q:'' };   // view: all | new | unanswered
+    const treeCollapsed = new Set();  // 접힌 팀 기억
 
-    // 카테고리별 미답변 수 (그 카테고리 방만)
+    // 카테고리별 미답변/신규 수 (그 카테고리 방만)
     function catUnread(m, cat) {
       return (m.rooms || []).filter(r => r.category === cat && r.state === 'unanswered').length;
     }
+    function catNew(m, cat) {
+      return (m.rooms || []).filter(r => r.category === cat && r.state === 'new').length;
+    }
     const sumU = arr => arr.reduce((s,m)=>s+m.unread,0);
+    const sumN = arr => arr.reduce((s,m)=>s+(m.newcnt||0),0);
 
-    function memberRow(m, u, depth) {
+    // 신규(파랑)·미답변(빨강) 배지 묶음
+    function badges(nw, un) {
+      let b = '';
+      if (nw > 0) b += `<span class="bd-new">신규 ${nw}</span>`;
+      if (un > 0) b += `<span class="bd-un">미답변 ${un}</span>`;
+      if (!b) b = '<span class="zero">0</span>';
+      return b;
+    }
+
+    function memberRow(m, nw, un, depth) {
       const el = document.createElement('div');
-      el.className = 'mg-member' + (u>0?' has-unread':'') + (m.state==='resigned'?' resigned':'');
+      el.className = 'mg-member' + ((nw>0||un>0)?' has-unread':'') + (m.state==='resigned'?' resigned':'');
       el.style.paddingLeft = (4 + depth*11) + 'px';
       el.innerHTML = `
         <span class="av"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
         <span class="nm">${m.name}</span>
-        ${u>0 ? `<span class="ub">${u}</span>` : `<span class="zero">0</span>`}`;
+        <span class="bd-wrap">${badges(nw, un)}</span>`;
       return el;
+    }
+
+    // 보기 모드에 맞는 카테고리 카운트 (멤버가 이 카테고리에 표시될지)
+    function catVisible(m, cat) {
+      if (tree.view === 'new') return catNew(m, cat) > 0;
+      if (tree.view === 'unanswered') return catUnread(m, cat) > 0;
+      return true;
+    }
+    // 헤더 합계 라벨 (보기 모드 반영)
+    function headMeta(nw, un) {
+      const parts = [];
+      if (tree.view !== 'unanswered') parts.push(`신규 <span class="n">${nw}</span>`);
+      if (tree.view !== 'new') parts.push(`미답변 <span class="u">${un}</span>`);
+      return parts.join(' · ');
     }
 
     // 트리: 재직상태 → 팀(SV) → 카테고리 → 상담수단(채팅/TM) → 사람
@@ -1058,7 +1101,7 @@
 
       const cons = members.filter(m => m.role === '컨설턴트');
       document.getElementById('mg-count').textContent = cons.length;
-      document.getElementById('mg-unread').textContent = '미답변 ' + sumU(cons);
+      document.getElementById('mg-unread').innerHTML = `신규 ${sumN(cons)} · 미답변 ${sumU(cons)}`;
 
       const sections = [
         { key:'active',   label:'재직자', cls:'' },
@@ -1067,21 +1110,21 @@
 
       sections.forEach(sec => {
         let list = cons.filter(m => m.state === sec.key);
-        if (tree.unreadOnly) list = list.filter(m => m.unread > 0);
+        if (tree.view === 'new') list = list.filter(m => (m.newcnt||0) > 0);
+        if (tree.view === 'unanswered') list = list.filter(m => m.unread > 0);
         if (tree.q) list = list.filter(m => m.name.includes(tree.q));
         if (list.length === 0) return;
 
         const sh = document.createElement('div');
         sh.className = 'mg-section-head ' + sec.cls;
         sh.innerHTML = `<span class="dot"></span>${sec.label}
-          <span class="meta">${list.length}명 · 미답변 <span class="u">${sumU(list)}</span></span>`;
+          <span class="meta">${list.length}명 · ${headMeta(sumN(list), sumU(list))}</span>`;
         wrap.appendChild(sh);
 
         // 팀(SV) 단위
         TEAMS.forEach(team => {
           const teamMem = list.filter(m => m.team === team.key);
           if (!teamMem.length) return;
-          const teamU = sumU(teamMem);
           const tkey = 'team:' + sec.key + ':' + team.key;
           const tCollapsed = treeCollapsed.has(tkey);
 
@@ -1089,7 +1132,7 @@
           th.className = 'mg-team-head';
           th.innerHTML = `<span class="caret">${tCollapsed?'▸':'▾'}</span>
             <span class="tnm">${team.key}</span><span class="tsv">SV ${team.sv}</span>
-            <span class="tmeta">${teamMem.length}명 · 미답변 <span class="u">${teamU}</span></span>`;
+            <span class="tmeta">${teamMem.length}명 · ${headMeta(sumN(teamMem), sumU(teamMem))}</span>`;
           const tbody = document.createElement('div');
           tbody.className = 'mg-team-body' + (tCollapsed?' collapsed':'');
           th.addEventListener('click', () => {
@@ -1101,19 +1144,16 @@
           wrap.appendChild(tbody);
 
           // 팀 안에서 카테고리
-          let cats = CAT_LIST.filter(c => teamMem.some(m => (m.categories||[]).includes(c)));
-          if (tree.sortByUnread) {
-            cats.sort((a,b) =>
-              teamMem.filter(m=>m.categories.includes(b)).reduce((s,m)=>s+catUnread(m,b),0) -
-              teamMem.filter(m=>m.categories.includes(a)).reduce((s,m)=>s+catUnread(m,a),0));
-          }
+          let cats = CAT_LIST.filter(c => teamMem.some(m => (m.categories||[]).includes(c) && catVisible(m, c)));
           cats.forEach(cat => {
-            const catMem = teamMem.filter(m => (m.categories||[]).includes(cat));
-            const catU = catMem.reduce((s,m)=>s+catUnread(m,cat),0);
+            const catMem = teamMem.filter(m => (m.categories||[]).includes(cat) && catVisible(m, cat));
+            if (!catMem.length) return;
+            const cN = catMem.reduce((s,m)=>s+catNew(m,cat),0);
+            const cU = catMem.reduce((s,m)=>s+catUnread(m,cat),0);
             const ch = document.createElement('div');
             ch.className = 'mg-grp-head lv-category';
             ch.style.paddingLeft = '14px';
-            ch.innerHTML = `<span class="gl">${cat}</span><span class="meta">· ${catMem.length} · 미답변 <span class="u">${catU}</span></span>`;
+            ch.innerHTML = `<span class="gl">${cat}</span><span class="meta">· ${catMem.length} · ${headMeta(cN, cU)}</span>`;
             tbody.appendChild(ch);
 
             // 상담수단(채팅/TM)
@@ -1126,9 +1166,9 @@
               chHead.innerHTML = `<span class="chip-ch ${chan==='전화'?'tm':'chat'}">${chan==='전화'?'전화(TM)':'채팅'}</span>`;
               tbody.appendChild(chHead);
 
-              if (tree.sortByUnread) chMem = chMem.slice().sort((a,b)=>catUnread(b,cat)-catUnread(a,cat));
+              if (tree.sortByUnread) chMem = chMem.slice().sort((a,b)=>(catUnread(b,cat)+catNew(b,cat))-(catUnread(a,cat)+catNew(a,cat)));
               else chMem = chMem.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-              chMem.forEach(m => tbody.appendChild(memberRow(m, catUnread(m, cat), 3)));
+              chMem.forEach(m => tbody.appendChild(memberRow(m, catNew(m,cat), catUnread(m,cat), 3)));
             });
           });
         });
@@ -1148,8 +1188,13 @@
     document.getElementById('mg-state').addEventListener('change', e => {
       tree.state = e.target.value; renderTree();
     });
-    document.getElementById('mg-unreadonly').addEventListener('change', e => {
-      tree.unreadOnly = e.target.checked; renderTree();
+    document.querySelectorAll('#mg-view .mgv').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('#mg-view .mgv').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        tree.view = b.dataset.v;
+        renderTree();
+      });
     });
     document.getElementById('mg-sort').addEventListener('click', () => {
       tree.sortByUnread = !tree.sortByUnread;
