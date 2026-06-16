@@ -76,16 +76,17 @@
     .mg-sort { color:#3a3de8; cursor:pointer; }
     .mg-tree { display:block; }
     .mg-tree.collapsed { display:none; }
-    .mg-team-head { display:flex; align-items:center; gap:5px; padding:7px 2px 5px 4px; cursor:pointer; border-top:1px solid #eee; margin-top:2px; }
+    .mg-team-head { display:flex; align-items:center; gap:5px; padding:7px 2px 5px 4px; cursor:pointer; border-top:1px solid #eee; margin-top:2px; flex-wrap:nowrap; }
     .mg-team-head:hover { background:#f6f6fb; }
-    .mg-team-head .caret { color:#9a9ab0; font-size:10px; width:12px; }
-    .mg-team-head .tnm { font-size:13px; font-weight:700; color:#333; }
-    .mg-team-head .tsv { font-size:10px; color:#5b5fcf; background:#eef0ff; border-radius:5px; padding:1px 6px; }
-    .mg-team-head .tmeta { margin-left:auto; font-size:11px; color:#999; }
-    .mg-team-head .tmeta .u { color:#f0455a; font-weight:700; }
+    .mg-team-head .caret { color:#9a9ab0; font-size:10px; width:12px; flex-shrink:0; }
+    .mg-team-head .tnm { font-size:13px; font-weight:700; color:#333; white-space:nowrap; }
+    .mg-team-head .tsv { font-size:10px; color:#5b5fcf; background:#eef0ff; border-radius:5px; padding:1px 6px; white-space:nowrap; flex-shrink:0; }
+    .mg-team-head .tmeta { margin-left:auto; font-size:11px; color:#999; display:inline-flex; gap:3px; align-items:center; flex-shrink:0; white-space:nowrap; }
     .mg-team-body.collapsed { display:none; }
-    .mg-grp-head .meta { font-size:11px; color:#aaa; font-weight:500; }
-    .mg-grp-head .meta .u { color:#f0455a; }
+    .mg-grp-head .meta { font-size:11px; color:#aaa; font-weight:500; display:inline-flex; gap:3px; align-items:center; white-space:nowrap; }
+    /* 헤더 미니 배지 */
+    .hb-new { background:#e9f0ff; color:#2f6bff; border-radius:8px; font-size:10px; font-weight:700; padding:1px 6px; }
+    .hb-un { background:#fdeaea; color:#f0455a; border-radius:8px; font-size:10px; font-weight:700; padding:1px 6px; }
     .mg-section-head { display:flex; align-items:center; gap:6px; padding:8px 2px 4px; font-size:12px; font-weight:700; }
     .mg-section-head .dot { width:7px; height:7px; border-radius:50%; background:#1a9c5b; }
     .mg-section-head.resigned .dot { background:#bbb; }
@@ -117,9 +118,11 @@
     .mg-member.resigned .nm { color:#aaa; text-decoration:line-through; }
     .mg-member .ub { margin-left:auto; background:#f0455a; color:#fff; border-radius:11px; font-size:11px; font-weight:700; padding:2px 9px; }
     .mg-member .zero { margin-left:auto; font-size:12px; color:#ccc; }
-    .mg-member .bd-wrap { margin-left:auto; display:inline-flex; gap:4px; align-items:center; }
-    .bd-new { background:#e9f0ff; color:#2f6bff; border-radius:10px; font-size:11px; font-weight:700; padding:2px 8px; }
-    .bd-un { background:#fdeaea; color:#f0455a; border-radius:10px; font-size:11px; font-weight:700; padding:2px 8px; }
+    .mg-member { display:flex; align-items:center; gap:7px; }
+    .mg-member .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0; }
+    .mg-member .bd-wrap { margin-left:auto; display:inline-flex; gap:4px; align-items:center; flex-shrink:0; }
+    .bd-new { background:#2f6bff; color:#fff; border-radius:9px; font-size:11px; font-weight:700; min-width:18px; text-align:center; padding:1px 6px; }
+    .bd-un { background:#f0455a; color:#fff; border-radius:9px; font-size:11px; font-weight:700; min-width:18px; text-align:center; padding:1px 6px; }
     /* 보기 토글 */
     .mg-view { display:flex; gap:4px; margin:2px 0 6px; }
     .mgv { flex:1; padding:6px 0; border:1px solid #e2e2e8; border-radius:7px; background:#fff; font-size:12px; color:#666; cursor:pointer; }
@@ -1060,11 +1063,13 @@
     const sumU = arr => arr.reduce((s,m)=>s+m.unread,0);
     const sumN = arr => arr.reduce((s,m)=>s+(m.newcnt||0),0);
 
-    // 신규(파랑)·미답변(빨강) 배지 묶음
+    // 신규(파랑)·미답변(빨강) 배지 — 보기 모드에 따라 하나만, 색+숫자만 (압축)
     function badges(nw, un) {
+      const showNew = tree.view !== 'unanswered';
+      const showUn  = tree.view !== 'new';
       let b = '';
-      if (nw > 0) b += `<span class="bd-new">신규 ${nw}</span>`;
-      if (un > 0) b += `<span class="bd-un">미답변 ${un}</span>`;
+      if (showNew && nw > 0) b += `<span class="bd-new" title="신규 ${nw}">${nw}</span>`;
+      if (showUn  && un > 0) b += `<span class="bd-un" title="미답변 ${un}">${un}</span>`;
       if (!b) b = '<span class="zero">0</span>';
       return b;
     }
@@ -1086,12 +1091,12 @@
       if (tree.view === 'unanswered') return catUnread(m, cat) > 0;
       return true;
     }
-    // 헤더 합계 라벨 (보기 모드 반영)
+    // 헤더 합계 — 색+숫자 미니 배지 (신규 파랑 / 미답변 빨강)
     function headMeta(nw, un) {
-      const parts = [];
-      if (tree.view !== 'unanswered') parts.push(`신규 <span class="n">${nw}</span>`);
-      if (tree.view !== 'new') parts.push(`미답변 <span class="u">${un}</span>`);
-      return parts.join(' · ');
+      let s = '';
+      if (tree.view !== 'unanswered') s += `<span class="hb-new" title="신규 ${nw}">${nw}</span>`;
+      if (tree.view !== 'new')        s += `<span class="hb-un" title="미답변 ${un}">${un}</span>`;
+      return s;
     }
 
     // 트리: 재직상태 → 팀(SV) → 카테고리 → 상담수단(채팅/TM) → 사람
