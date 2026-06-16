@@ -1136,7 +1136,7 @@
           const th = document.createElement('div');
           th.className = 'mg-team-head';
           th.innerHTML = `<span class="caret">${tCollapsed?'▸':'▾'}</span>
-            <span class="tnm">${team.key}</span><span class="tsv">SV ${team.sv}</span>
+            <span class="tnm">${team.key}</span>
             <span class="tmeta">${teamMem.length}명 · ${headMeta(sumN(teamMem), sumU(teamMem))}</span>`;
           const tbody = document.createElement('div');
           tbody.className = 'mg-team-body' + (tCollapsed?' collapsed':'');
