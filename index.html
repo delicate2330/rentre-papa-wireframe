@@ -83,6 +83,15 @@
     .mg-team-head .tsv { font-size:10px; color:#5b5fcf; background:#eef0ff; border-radius:5px; padding:1px 6px; white-space:nowrap; flex-shrink:0; }
     .mg-team-head .tmeta { margin-left:auto; font-size:11px; color:#999; display:inline-flex; gap:3px; align-items:center; flex-shrink:0; white-space:nowrap; }
     .mg-team-body.collapsed { display:none; }
+    .mg-team-body { padding-left:6px; border-left:2px solid #ececf3; margin-left:8px; }
+    /* 카테고리 헤더 (또렷하게) */
+    .mg-cat2 { display:flex; align-items:center; gap:6px; padding:6px 8px; margin:6px 0 2px; background:#f4f5fb; border-radius:6px; }
+    .mg-cat2 .cat2-nm { font-size:12px; font-weight:700; color:#3a3de8; }
+    .mg-cat2 .cat2-cnt { font-size:11px; color:#9a9ab0; }
+    /* 멤버 행 + 채널 태그 */
+    .mg-member { padding-left:10px; }
+    .m-ch { font-size:10px; padding:1px 6px; border-radius:4px; background:#eef0ff; color:#5558cf; flex-shrink:0; }
+    .m-ch.tm { background:#fff1e3; color:#d98300; }
     .mg-grp-head .meta { font-size:11px; color:#aaa; font-weight:500; display:inline-flex; gap:3px; align-items:center; white-space:nowrap; }
     /* 헤더 미니 배지 */
     .hb-new { background:#e9f0ff; color:#2f6bff; border-radius:8px; font-size:10px; font-weight:700; padding:1px 6px; }
@@ -1074,13 +1083,13 @@
       return b;
     }
 
-    function memberRow(m, nw, un, depth) {
+    function memberRow(m, nw, un, chan) {
       const el = document.createElement('div');
       el.className = 'mg-member' + ((nw>0||un>0)?' has-unread':'') + (m.state==='resigned'?' resigned':'');
-      el.style.paddingLeft = (4 + depth*11) + 'px';
+      const chTag = chan === '전화' ? '<span class="m-ch tm">TM</span>' : '<span class="m-ch">채팅</span>';
       el.innerHTML = `
         <span class="av"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
-        <span class="nm">${m.name}</span>
+        <span class="nm">${m.name}</span>${chTag}
         <span class="bd-wrap">${badges(nw, un)}</span>`;
       return el;
     }
@@ -1153,28 +1162,15 @@
           cats.forEach(cat => {
             const catMem = teamMem.filter(m => (m.categories||[]).includes(cat) && catVisible(m, cat));
             if (!catMem.length) return;
-            const cN = catMem.reduce((s,m)=>s+catNew(m,cat),0);
-            const cU = catMem.reduce((s,m)=>s+catUnread(m,cat),0);
             const ch = document.createElement('div');
-            ch.className = 'mg-grp-head lv-category';
-            ch.style.paddingLeft = '14px';
-            ch.innerHTML = `<span class="gl">${cat}</span>`;
+            ch.className = 'mg-cat2';
+            ch.innerHTML = `<span class="cat2-nm">${cat}</span><span class="cat2-cnt">${catMem.length}</span>`;
             tbody.appendChild(ch);
 
-            // 상담수단(채팅/TM)
-            ['채팅','전화'].forEach(chan => {
-              let chMem = catMem.filter(m => m.channel === chan);
-              if (!chMem.length) return;
-              const chHead = document.createElement('div');
-              chHead.className = 'mg-chan-head';
-              chHead.style.paddingLeft = '24px';
-              chHead.innerHTML = `<span class="chip-ch ${chan==='전화'?'tm':'chat'}">${chan==='전화'?'전화(TM)':'채팅'}</span>`;
-              tbody.appendChild(chHead);
-
-              if (tree.sortByUnread) chMem = chMem.slice().sort((a,b)=>(catUnread(b,cat)+catNew(b,cat))-(catUnread(a,cat)+catNew(a,cat)));
-              else chMem = chMem.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-              chMem.forEach(m => tbody.appendChild(memberRow(m, catNew(m,cat), catUnread(m,cat), 3)));
-            });
+            let mem = catMem.slice();
+            if (tree.sortByUnread) mem.sort((a,b)=>(catUnread(b,cat)+catNew(b,cat))-(catUnread(a,cat)+catNew(a,cat)));
+            else mem.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+            mem.forEach(m => tbody.appendChild(memberRow(m, catNew(m,cat), catUnread(m,cat), m.channel)));
           });
         });
       });
